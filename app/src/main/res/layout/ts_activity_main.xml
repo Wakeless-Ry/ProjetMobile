@@ -2,28 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/main"
+    android:id="@+id/ts_main"
     android:gravity="center_horizontal|center_vertical"
     android:orientation="vertical">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/traveling_title"
-        android:textSize="40sp" />
-
-    <Button
-        android:id="@+id/travelshare_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="@string/travelshare_title"
-        android:textSize="40sp" />
-
-    <Button
-        android:id="@+id/travelpath_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/travelpath_title"
         android:textSize="40sp" />
 
 </LinearLayout>

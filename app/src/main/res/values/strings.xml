@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Traveling</string>
+    <string name="traveling_title">Traveling</string>
+    <string name="travelshare_title">Travelshare</string>
+    <string name="travelpath_title">Travelpath</string>
 </resources>
