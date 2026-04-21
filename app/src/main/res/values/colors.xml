@@ -11,4 +11,19 @@
     <color name="teal_700">#FF018786</color>
     <color name="gray_600">#4B5563</color>
     <color name="bg_gradient">#FDF4FF</color>
+
+    <color name="primary">#FF6B6B</color>
+    <color name="primary_dark">#E63946</color>
+    <color name="accent">#4ECDC4</color>
+
+    <color name="light_gray">#F5F5F5</color>
+    <color name="medium_gray">#BDBDBD</color>
+    <color name="dark_gray">#757575</color>
+
+    <color name="restauration">#FF6B6B</color>
+    <color name="loisirs">#4ECDC4</color>
+    <color name="decouvertes">#45B7D1</color>
+    <color name="culture">#96CEB4</color>
+
+    <color name="border_light">#E0E0E0</color>
 </resources>
