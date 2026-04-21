@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F4F8">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choisissez votre mode"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#1a1a1a"
+            android:layout_marginBottom="24dp" />
+
+        <!-- ÉCONOMIQUE -->
+        <LinearLayout
+            android:id="@+id/card_economique"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="160dp"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/tp_card_economique_bg"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💰 Économique"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Activités"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_economique_activities"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="40dp"
+                    android:background="#80FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Budget"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_economique_price"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="40dp"
+                    android:background="#80FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Durée"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_economique_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ÉQUILIBRÉ -->
+        <LinearLayout
+            android:id="@+id/card_equilibre"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="160dp"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/tp_card_equilibre_bg"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚖️ Équilibré"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Activités"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_equilibre_activities"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="40dp"
+                    android:background="#80FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Budget"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_equilibre_price"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="40dp"
+                    android:background="#80FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Durée"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_equilibre_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CONFORT -->
+        <LinearLayout
+            android:id="@+id/card_confort"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="160dp"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/tp_card_confort_bg"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✨ Confort"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Activités"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_confort_activities"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="40dp"
+                    android:background="#80FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Budget"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_confort_price"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="40dp"
+                    android:background="#80FFFFFF" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Durée"
+                        android:textSize="12sp"
+                        android:textColor="#DDEEFF" />
+                    <TextView
+                        android:id="@+id/text_confort_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

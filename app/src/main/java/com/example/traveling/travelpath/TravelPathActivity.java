@@ -1,5 +1,6 @@
 package com.example.traveling.travelpath;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.CheckBox;
 import android.widget.TextView;
@@ -16,8 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TravelPathActivity extends AppCompatActivity implements PlaceAdapter.PlaceSelectionListener {
-
-    // UI Components - Filters
     private CheckBox checkboxRestauration;
     private CheckBox checkboxLoisirs;
     private CheckBox checkboxDecouvertes;
@@ -35,15 +34,13 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
     private MaterialButton btnReset;
     private MaterialButton btnSearch;
 
-    // UI Components - Places List
     private RecyclerView recyclerPlaces;
     private PlaceAdapter placeAdapter;
     private TextView textResultCount;
 
-    // Data
     private List<Place> allPlaces;
     private List<Place> filteredPlaces;
-    private List<Place> selectedPlaces; // Whitelist
+    private List<Place> selectedPlaces;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,39 +53,27 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         setupListeners();
     }
 
-    /**
-     * Initialize all UI component references
-     */
     private void initializeViews() {
-        // Checkboxes
         checkboxRestauration = findViewById(R.id.checkbox_restauration);
         checkboxLoisirs = findViewById(R.id.checkbox_loisirs);
         checkboxDecouvertes = findViewById(R.id.checkbox_decouvertes);
         checkboxCulture = findViewById(R.id.checkbox_culture);
 
-        // Budget fields
         editBudgetMin = findViewById(R.id.edit_budget_min);
         editBudgetMax = findViewById(R.id.edit_budget_max);
 
-        // Duration fields
         editDurationMin = findViewById(R.id.edit_duration_min);
         editDurationMax = findViewById(R.id.edit_duration_max);
 
-        // Length (Distance) fields
         editLengthMin = findViewById(R.id.edit_length_min);
         editLengthMax = findViewById(R.id.edit_length_max);
 
-        // Buttons
         btnReset = findViewById(R.id.btn_reset);
         btnSearch = findViewById(R.id.btn_search);
 
-        // Result count
         textResultCount = findViewById(R.id.text_result_count);
     }
 
-    /**
-     * Setup RecyclerView for places list
-     */
     private void setupRecyclerView() {
         recyclerPlaces = findViewById(R.id.recycler_places);
         recyclerPlaces.setLayoutManager(new LinearLayoutManager(this));
@@ -101,9 +86,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         recyclerPlaces.setAdapter(placeAdapter);
     }
 
-    /**
-     * Load sample places (replace with database or API call)
-     */
     private void loadSamplePlaces() {
         // Sample places with tags
         Place place1 = new Place("1", "Restaurant Le Petit Plateau", 25.50, 43.6108, 3.8767, 1.5);
@@ -135,23 +117,16 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         allPlaces.add(place5);
         allPlaces.add(place6);
 
-        // Initial display of all places
         filteredPlaces.addAll(allPlaces);
         placeAdapter.notifyDataSetChanged();
         updateResultCount();
     }
 
-    /**
-     * Setup button click listeners and form validation
-     */
     private void setupListeners() {
         btnSearch.setOnClickListener(v -> handleSearch());
         btnReset.setOnClickListener(v -> handleReset());
     }
 
-    /**
-     * Handle search button click - validates and filters places
-     */
     private void handleSearch() {
         if (!isFormValid()) {
             return;
@@ -159,16 +134,25 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
 
         FilterData filterData = collectFilterData();
         applyFilters(filterData);
+
+        if (!filteredPlaces.isEmpty()) {
+            Intent intent = new Intent(this, TravelModeActivity.class);
+            // Optional: pass the filtered places so TravelMode can use them
+            // instead of its hardcoded sample data
+            intent.putParcelableArrayListExtra(
+                    TravelModeActivity.EXTRA_PLACES,
+                    new ArrayList<>(filteredPlaces)
+            );
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "Aucun lieu trouvé", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    /**
-     * Apply filters to the places list
-     */
     private void applyFilters(FilterData filterData) {
         filteredPlaces.clear();
 
         for (Place place : allPlaces) {
-            // Check preference filter
             if (!filterData.preferences.isEmpty()) {
                 boolean matchesPreference = false;
                 for (String pref : filterData.preferences) {
@@ -180,7 +164,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
                 if (!matchesPreference) continue;
             }
 
-            // Check budget filter
             if (filterData.budgetMin > 0 && place.getPrice() < filterData.budgetMin) {
                 continue;
             }
@@ -188,7 +171,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
                 continue;
             }
 
-            // Check duration filter
             if (filterData.durationMin > 0 && place.getUsualTimeSpentHours() < filterData.durationMin) {
                 continue;
             }
@@ -196,7 +178,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
                 continue;
             }
 
-            // If all filters pass, add to filtered list
             filteredPlaces.add(place);
         }
 
@@ -207,25 +188,18 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Handle reset button click
-     */
     private void handleReset() {
         clearAllFields();
         filteredPlaces.clear();
         filteredPlaces.addAll(allPlaces);
-        placeAdapter.clearSelections();
+        placeAdapter.selectAll();
         placeAdapter.notifyDataSetChanged();
         updateResultCount();
         selectedPlaces.clear();
         Toast.makeText(this, "Filtres réinitialisés", Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Validate form inputs before processing
-     */
     private boolean isFormValid() {
-        // Validate budget range
         if (!editBudgetMin.getText().toString().isEmpty() &&
                 !editBudgetMax.getText().toString().isEmpty()) {
             try {
@@ -241,7 +215,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
             }
         }
 
-        // Validate duration range
         if (!editDurationMin.getText().toString().isEmpty() &&
                 !editDurationMax.getText().toString().isEmpty()) {
             try {
@@ -257,7 +230,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
             }
         }
 
-        // Validate length range
         if (!editLengthMin.getText().toString().isEmpty() &&
                 !editLengthMax.getText().toString().isEmpty()) {
             try {
@@ -276,19 +248,14 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         return true;
     }
 
-    /**
-     * Collect all filter data from form
-     */
     private FilterData collectFilterData() {
         FilterData data = new FilterData();
 
-        // Collect preferences
         if (checkboxRestauration.isChecked()) data.preferences.add("restauration");
         if (checkboxLoisirs.isChecked()) data.preferences.add("loisirs");
         if (checkboxDecouvertes.isChecked()) data.preferences.add("decouvertes");
         if (checkboxCulture.isChecked()) data.preferences.add("culture");
 
-        // Collect budget
         if (!editBudgetMin.getText().toString().isEmpty()) {
             data.budgetMin = Double.parseDouble(editBudgetMin.getText().toString());
         }
@@ -296,7 +263,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
             data.budgetMax = Double.parseDouble(editBudgetMax.getText().toString());
         }
 
-        // Collect duration
         if (!editDurationMin.getText().toString().isEmpty()) {
             data.durationMin = Double.parseDouble(editDurationMin.getText().toString());
         }
@@ -304,7 +270,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
             data.durationMax = Double.parseDouble(editDurationMax.getText().toString());
         }
 
-        // Collect length
         if (!editLengthMin.getText().toString().isEmpty()) {
             data.lengthMin = Double.parseDouble(editLengthMin.getText().toString());
         }
@@ -315,9 +280,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         return data;
     }
 
-    /**
-     * Clear all form fields
-     */
     private void clearAllFields() {
         checkboxRestauration.setChecked(false);
         checkboxLoisirs.setChecked(false);
@@ -332,16 +294,11 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         editLengthMax.setText("");
     }
 
-    /**
-     * Update result count display
-     */
     private void updateResultCount() {
         int count = filteredPlaces.size();
         String text = count + (count == 1 ? " lieu" : " lieux");
         textResultCount.setText(text);
     }
-
-    // ==================== PlaceSelectionListener Implementation ====================
 
     @Override
     public void onPlaceSelected(Place place, boolean isSelected) {
@@ -357,20 +314,15 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
 
     @Override
     public void onPlaceClick(Place place) {
-        // Handle place item click (optional - could open detail view)
-        Toast.makeText(this, "Lieu: " + place.getName(), Toast.LENGTH_SHORT).show();
+        place.setSelected(!place.isSelected());
+        this.onPlaceSelected(place, place.isSelected());
+        placeAdapter.notifyDataSetChanged();
     }
 
-    /**
-     * Get the whitelist (selected places)
-     */
     public List<Place> getSelectedPlaces() {
         return selectedPlaces;
     }
 
-    /**
-     * Inner class to hold filter data
-     */
     public static class FilterData {
         public List<String> preferences = new ArrayList<>();
         public double budgetMin = 0;

@@ -1,9 +1,12 @@
 package com.example.traveling.travelpath;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.List;import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Place {
+import androidx.annotation.NonNull;
+
+public class Place implements Parcelable {
     private String id;
     private String name;
     private List<String> tags;
@@ -15,7 +18,18 @@ public class Place {
 
     public Place() {
         this.tags = new ArrayList<>();
-        this.selected = false;
+        this.selected = true;
+    }
+
+    protected Place(Parcel in) {
+        id = in.readString();
+        name = in.readString();
+        tags = in.createStringArrayList();
+        price = in.readDouble();
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        usualTimeSpentHours = in.readDouble();
+        selected = in.readByte() != 0;
     }
 
     public Place(String id, String name, double price, double latitude, double longitude, double usualTimeSpentHours) {
@@ -26,7 +40,7 @@ public class Place {
         this.latitude = latitude;
         this.longitude = longitude;
         this.usualTimeSpentHours = usualTimeSpentHours;
-        this.selected = false;
+        this.selected = true;
     }
 
     public String getId() {
@@ -157,4 +171,28 @@ public class Place {
     public int hashCode() {
         return id.hashCode();
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int i) {
+        dest.writeString(id);
+        dest.writeString(name);
+        dest.writeStringList(tags);
+        dest.writeDouble(price);
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
+        dest.writeDouble(usualTimeSpentHours);
+        dest.writeByte((byte) (selected ? 1 : 0));
+    }
+
+    public static final Creator<Place> CREATOR = new Creator<Place>() {
+        @Override
+        public Place createFromParcel(Parcel in) { return new Place(in); }
+        @Override
+        public Place[] newArray(int size) { return new Place[size]; }
+    };
 }

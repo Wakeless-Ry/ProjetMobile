@@ -24,6 +24,8 @@
         </activity>
 
         <activity android:name=".travelpath.TravelPathActivity" />
+        <activity android:name=".travelpath.TravelModeActivity" />
+        <activity android:name=".travelpath.PlaceListActivity" />
 
         <activity android:name=".travelshare.TravelShareActivity" />
         <activity android:name=".travelshare.PhotoHomeActivity" />
