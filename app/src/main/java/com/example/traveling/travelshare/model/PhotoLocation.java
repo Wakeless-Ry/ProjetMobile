@@ -1,4 +1,4 @@
-package com.example.traveling.travelshare;
+package com.example.traveling.travelshare.model;
 
 public class PhotoLocation {
     private String name;

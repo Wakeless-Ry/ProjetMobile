@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
@@ -35,8 +37,11 @@ android {
 }
 
 dependencies {
-    implementation(libs.appcompat)
+    implementation(platform("com.github.bumptech.glide:glide:4.16.0"))
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.material)
+    implementation(libs.appcompat)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     testImplementation(libs.junit)
@@ -44,3 +49,4 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
 }
+

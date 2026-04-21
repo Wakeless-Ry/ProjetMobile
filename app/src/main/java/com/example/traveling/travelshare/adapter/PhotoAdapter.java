@@ -1,4 +1,4 @@
-package com.example.traveling.travelshare.Adapter;
+package com.example.traveling.travelshare.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -51,7 +51,6 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoViewHol
     public void onBindViewHolder(@NonNull PhotoViewHolder holder, int position) {
         Photo photo = photos.get(position);
 
-        // Image avec Glide
         Glide.with(context)
                 .load(photo.getImageUrl())
                 .transition(DrawableTransitionOptions.withCrossFade())
