@@ -7,56 +7,73 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.traveling.R;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class TravelModeActivity extends AppCompatActivity {
-
-    public static final String EXTRA_MODE = "extra_mode";
-    public static final String EXTRA_PLACES = "extra_places";
-
-    public static final String MODE_ECONOMIQUE = "Économique";
-    public static final String MODE_EQUILIBRE = "Équilibré";
-    public static final String MODE_CONFORT = "Confort";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.tp_parcours_viewer);
 
-        // --- Build your place lists per mode ---
-        List<Place> economiquePlaces = buildEconomiquePlaces();
-        List<Place> equilibrePlaces = buildEquilibrePlaces();
-        List<Place> confortPlaces   = buildConfortPlaces();
+        TravelPathActivity.FilterData filterData = this.getFilterData();
 
-        // --- Wire up the Économique card ---
+        TroisParcours troisParcours = buildParcours(filterData);
+
         bindModeCard(
             R.id.card_economique,
-            R.id.text_economique_activities,
+            R.id.text_economique_distance,
             R.id.text_economique_price,
             R.id.text_economique_time,
-            economiquePlaces,
-            MODE_ECONOMIQUE
+                troisParcours.economique,
+                "Économique"
         );
 
-        // --- Wire up the Équilibré card ---
         bindModeCard(
             R.id.card_equilibre,
-            R.id.text_equilibre_activities,
+            R.id.text_equilibre_distance,
             R.id.text_equilibre_price,
             R.id.text_equilibre_time,
-            equilibrePlaces,
-            MODE_EQUILIBRE
+                troisParcours.equilibre,
+                "Équilibré"
         );
 
-        // --- Wire up the Confort card ---
         bindModeCard(
             R.id.card_confort,
-            R.id.text_confort_activities,
+            R.id.text_confort_distance,
             R.id.text_confort_price,
             R.id.text_confort_time,
-            confortPlaces,
-            MODE_CONFORT
+                troisParcours.confort,
+                "Confort"
         );
+    }
+
+    private TravelPathActivity.FilterData getFilterData() {
+        Intent intent = this.getIntent();
+        TravelPathActivity.FilterData filterData = new TravelPathActivity.FilterData();
+
+        filterData.preferences = intent.getStringArrayListExtra("preferences");
+        filterData.nbActivites = intent.getIntExtra("nbActivites", 0);
+        filterData.budgetMin = intent.getDoubleExtra("budgetMin", 0);
+        filterData.budgetMax = intent.getDoubleExtra("budgetMax", 0);
+        filterData.durationMin = intent.getDoubleExtra("durationMin", 0);
+        filterData.durationMax = intent.getDoubleExtra("durationMax", 0);
+        filterData.lengthMin = intent.getDoubleExtra("lengthMin", 0);
+        filterData.lengthMax = intent.getDoubleExtra("lengthMax", 0);
+        List<Place> places = intent.getParcelableArrayListExtra("selectedPlaces");
+        filterData.selectedPlaces = new ArrayList<>();
+
+        for (Place place : places) {
+            System.out.println(place);
+            for (String tag : filterData.preferences) {
+                if (place.getTags().contains(tag) && !filterData.selectedPlaces.contains(place)) {
+                    filterData.selectedPlaces.add(place);
+                }
+            }
+        }
+
+        return filterData;
     }
 
     private void bindModeCard(int cardId,
@@ -68,28 +85,23 @@ public class TravelModeActivity extends AppCompatActivity {
 
         View card = findViewById(cardId);
 
-        // Compute stats
-        int count = places.size();
-        double totalPrice = 0;
-        double totalTime  = 0;
-        for (Place p : places) {
-            totalPrice += p.getPrice();
-            totalTime  += p.getUsualTimeSpentHours();
-        }
+        Parcours parcours = new Parcours(places);
 
-        // Fill labels
+        double length = parcours.getDistance();
+        double totalPrice = parcours.getPrice();
+        double totalTime  = parcours.getDuration();
+
         ((TextView) findViewById(activitiesId))
-            .setText(count + " activité" + (count > 1 ? "s" : ""));
+            .setText(String.format("%.2f", length) + " km");
         ((TextView) findViewById(priceId))
             .setText(String.format("%.0f €", totalPrice));
         ((TextView) findViewById(timeId))
             .setText(formatTotalTime(totalTime));
 
-        // Navigate on click
         card.setOnClickListener(v -> {
             Intent intent = new Intent(this, PlaceListActivity.class);
-            intent.putExtra(EXTRA_MODE, mode);
-            intent.putParcelableArrayListExtra(EXTRA_PLACES, new ArrayList<>(places));
+            intent.putExtra("extra_mode", mode);
+            intent.putParcelableArrayListExtra("extra_places", new ArrayList<>(places));
             startActivity(intent);
         });
     }
@@ -98,44 +110,110 @@ public class TravelModeActivity extends AppCompatActivity {
         if (hours < 1) return String.format("%.0f min", hours * 60);
         int h = (int) hours;
         int m = (int) Math.round((hours - h) * 60);
-        return m > 0 ? h + " h " + m + " min" : h + " h";
+        return m > 0 ? h + "h" + m : h + "h";
     }
 
-    // -------------------------------------------------------------------------
-    // Sample data — replace with your real data source
-    // -------------------------------------------------------------------------
+    private Parcours generateParcours(TravelPathActivity.FilterData filterData) {
+        Parcours parcours = new Parcours();
 
-    private List<Place> buildEconomiquePlaces() {
-        List<Place> list = new ArrayList<>();
-        Place p1 = new Place("e1", "Jardin des Plantes", 0, 43.6108, 3.8767, 1.5);
-        p1.addTag("Nature"); p1.addTag("Loisirs");
-        Place p2 = new Place("e2", "Marché du Lez", 5, 43.6203, 3.9012, 1.0);
-        p2.addTag("Shopping");
-        list.add(p1); list.add(p2);
-        return list;
+        if (filterData.selectedPlaces.size() < filterData.nbActivites) {
+            filterData.nbActivites = filterData.selectedPlaces.size();
+        }
+
+        List<Place> places = filterData.selectedPlaces;
+        Collections.shuffle(places);
+
+        for (int i = 0; i < filterData.nbActivites; i++) {
+            parcours.add(places.get(i));
+        }
+
+        return parcours;
     }
 
-    private List<Place> buildEquilibrePlaces() {
-        List<Place> list = new ArrayList<>();
-        Place p1 = new Place("q1", "Musée Fabre", 10, 43.6117, 3.8802, 2.0);
-        p1.addTag("Culture");
-        Place p2 = new Place("q2", "Place de la Comédie", 0, 43.6085, 3.8796, 0.75);
-        p2.addTag("Loisirs");
-        Place p3 = new Place("q3", "Le Petit Jardin", 25, 43.6089, 3.8771, 1.5);
-        p3.addTag("Restauration");
-        list.add(p1); list.add(p2); list.add(p3);
-        return list;
+    private TroisParcours buildParcours(TravelPathActivity.FilterData filterData) {
+        TroisParcours troisParcours = new TroisParcours();
+
+        for (int i = 0; i < 1000; i++) {
+            Parcours parcours = generateParcours(filterData);
+
+            if (parcours.isValid(filterData)) {
+                if (troisParcours.economique.isEmpty() || troisParcours.economique.getPrice() > parcours.getPrice()) {
+                    troisParcours.economique = parcours;
+                }
+
+                if (troisParcours.equilibre.isEmpty() || troisParcours.equilibre.getMixedScore() > parcours.getMixedScore()) {
+                    troisParcours.equilibre = parcours;
+                }
+
+                if (troisParcours.confort.isEmpty() || troisParcours.confort.getDistance() > parcours.getDistance()) {
+                    troisParcours.confort = parcours;
+                }
+            }
+        }
+
+        return troisParcours;
     }
 
-    private List<Place> buildConfortPlaces() {
-        List<Place> list = new ArrayList<>();
-        Place p1 = new Place("c1", "Spa Nuxe", 80, 43.6120, 3.8750, 2.5);
-        p1.addTag("Bien-être");
-        Place p2 = new Place("c2", "Restaurant Maison", 60, 43.6095, 3.8780, 2.0);
-        p2.addTag("Restauration");
-        Place p3 = new Place("c3", "Domaine de Verchant", 50, 43.6200, 3.9100, 3.0);
-        p3.addTag("Loisirs"); p3.addTag("Bien-être");
-        list.add(p1); list.add(p2); list.add(p3);
-        return list;
+    private static class Parcours extends ArrayList<Place> {
+
+        public Parcours() {
+            super();
+        }
+
+        public Parcours(List<Place> places) {
+            super();
+            this.addAll(places);
+        }
+
+        public double getDistance() {
+            double total = 0;
+
+            for (int i = 0; i < this.size() - 1; i++) {
+                total += this.get(i).getDistance(this.get(i + 1));
+            }
+
+            return total;
+        }
+
+        public double getPrice() {
+            double total = 0;
+
+            for (Place place : this) {
+                total += place.getPrice();
+            }
+
+            return total;
+        }
+
+        public double getDuration() {
+            double total = 0;
+
+            for (Place place : this) {
+                total += place.getUsualTimeSpentHours();
+            }
+
+            total += this.getDistance() / 4;
+
+            return total;
+        }
+
+        public double getMixedScore() {
+            return getDistance() * 20 + getPrice();
+        }
+
+        public boolean isValid(TravelPathActivity.FilterData filterData) {
+            return this.getPrice() >= filterData.budgetMin
+                    && this.getPrice() <= filterData.budgetMax
+                    && this.getDuration() >= filterData.durationMin
+                    && this.getDuration() <= filterData.durationMax
+                    && this.getDistance() >= filterData.lengthMin
+                    && this.getDistance() <= filterData.lengthMax;
+        }
+    }
+
+    private static class TroisParcours {
+        public Parcours economique = new Parcours();
+        public Parcours equilibre = new Parcours();
+        public Parcours confort = new Parcours();
     }
 }

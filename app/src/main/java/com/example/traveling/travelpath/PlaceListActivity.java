@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.traveling.R;
 import java.util.ArrayList;
-import java.util.List;
 
 public class PlaceListActivity extends AppCompatActivity {
 
@@ -17,9 +16,9 @@ public class PlaceListActivity extends AppCompatActivity {
         setContentView(R.layout.tp_activity_place_list);
 
         // Retrieve data from intent
-        String mode = getIntent().getStringExtra(TravelModeActivity.EXTRA_MODE);
+        String mode = getIntent().getStringExtra("extra_mode");
         ArrayList<Place> places = getIntent()
-                .getParcelableArrayListExtra(TravelModeActivity.EXTRA_PLACES);
+                .getParcelableArrayListExtra("extra_places");
 
         // Toolbar title
         TextView title = findViewById(R.id.text_place_list_title);
@@ -40,7 +39,7 @@ public class PlaceListActivity extends AppCompatActivity {
                     public void onPlaceClick(Place place) {
                         // handle click if needed
                     }
-                }
+                }, false
         );
         recyclerView.setAdapter(adapter);
     }

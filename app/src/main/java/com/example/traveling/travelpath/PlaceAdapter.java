@@ -1,5 +1,7 @@
 package com.example.traveling.travelpath;
 
+import static android.view.View.INVISIBLE;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,8 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
     private List<Place> places;
     private PlaceSelectionListener selectionListener;
 
+    private boolean setCheckboxes;
+
     public interface PlaceSelectionListener {
         void onPlaceSelected(Place place, boolean isSelected);
         void onPlaceClick(Place place);
@@ -26,9 +30,10 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         this.places = places != null ? places : new ArrayList<>();
     }
 
-    public PlaceAdapter(List<Place> places, PlaceSelectionListener listener) {
+    public PlaceAdapter(List<Place> places, PlaceSelectionListener listener, boolean setCheckboxes) {
         this.places = places != null ? places : new ArrayList<>();
         this.selectionListener = listener;
+        this.setCheckboxes = setCheckboxes;
     }
 
     @NonNull
@@ -36,7 +41,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
     public PlaceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.tp_item_place, parent, false);
-        return new PlaceViewHolder(view);
+        return new PlaceViewHolder(view, this.setCheckboxes);
     }
 
     @Override
@@ -105,9 +110,12 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         private TextView textTimeSpent;
         private Place currentPlace;
 
-        public PlaceViewHolder(@NonNull View itemView) {
+        public PlaceViewHolder(@NonNull View itemView, boolean setCheckboxes) {
             super(itemView);
             checkboxPlace = itemView.findViewById(R.id.checkbox_place);
+            if (!setCheckboxes) {
+                checkboxPlace.setVisibility(INVISIBLE);
+            }
             textPlaceName = itemView.findViewById(R.id.text_place_name);
             textTags = itemView.findViewById(R.id.text_tags);
             textPrice = itemView.findViewById(R.id.text_price);

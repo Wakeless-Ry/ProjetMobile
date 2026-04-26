@@ -60,11 +60,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Activités"
+                        android:text="Distance"
                         android:textSize="12sp"
                         android:textColor="#DDEEFF" />
                     <TextView
-                        android:id="@+id/text_economique_activities"
+                        android:id="@+id/text_economique_distance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="—"
@@ -166,11 +166,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Activités"
+                        android:text="Distance"
                         android:textSize="12sp"
                         android:textColor="#DDEEFF" />
                     <TextView
-                        android:id="@+id/text_equilibre_activities"
+                        android:id="@+id/text_equilibre_distance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="—"
@@ -272,11 +272,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Activités"
+                        android:text="Distance"
                         android:textSize="12sp"
                         android:textColor="#DDEEFF" />
                     <TextView
-                        android:id="@+id/text_confort_activities"
+                        android:id="@+id/text_confort_distance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="—"

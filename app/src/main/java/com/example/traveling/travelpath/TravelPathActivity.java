@@ -2,25 +2,28 @@ package com.example.traveling.travelpath;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.widget.CheckBox;
-import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.example.traveling.R;
-import com.example.traveling.travelpath.PlaceAdapter;
-import com.example.traveling.travelpath.Place;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TravelPathActivity extends AppCompatActivity implements PlaceAdapter.PlaceSelectionListener {
-    private CheckBox checkboxRestauration;
-    private CheckBox checkboxLoisirs;
-    private CheckBox checkboxDecouvertes;
-    private CheckBox checkboxCulture;
+    private Map<String, CheckBox> preferences = new HashMap<>();
+
+    private TextInputEditText editNbActivites;
 
     private TextInputEditText editBudgetMin;
     private TextInputEditText editBudgetMax;
@@ -36,10 +39,8 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
 
     private RecyclerView recyclerPlaces;
     private PlaceAdapter placeAdapter;
-    private TextView textResultCount;
 
     private List<Place> allPlaces;
-    private List<Place> filteredPlaces;
     private List<Place> selectedPlaces;
 
     @Override
@@ -49,15 +50,12 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
 
         initializeViews();
         setupRecyclerView();
-        loadSamplePlaces();
+        loadPlaces();
         setupListeners();
     }
 
     private void initializeViews() {
-        checkboxRestauration = findViewById(R.id.checkbox_restauration);
-        checkboxLoisirs = findViewById(R.id.checkbox_loisirs);
-        checkboxDecouvertes = findViewById(R.id.checkbox_decouvertes);
-        checkboxCulture = findViewById(R.id.checkbox_culture);
+        editNbActivites = findViewById(R.id.edit_steps);
 
         editBudgetMin = findViewById(R.id.edit_budget_min);
         editBudgetMax = findViewById(R.id.edit_budget_max);
@@ -70,8 +68,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
 
         btnReset = findViewById(R.id.btn_reset);
         btnSearch = findViewById(R.id.btn_search);
-
-        textResultCount = findViewById(R.id.text_result_count);
     }
 
     private void setupRecyclerView() {
@@ -79,47 +75,34 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         recyclerPlaces.setLayoutManager(new LinearLayoutManager(this));
 
         allPlaces = new ArrayList<>();
-        filteredPlaces = new ArrayList<>();
         selectedPlaces = new ArrayList<>();
 
-        placeAdapter = new PlaceAdapter(filteredPlaces, this);
+        placeAdapter = new PlaceAdapter(allPlaces, this, true);
         recyclerPlaces.setAdapter(placeAdapter);
     }
 
-    private void loadSamplePlaces() {
-        // Sample places with tags
-        Place place1 = new Place("1", "Restaurant Le Petit Plateau", 25.50, 43.6108, 3.8767, 1.5);
-        place1.addTag("restauration");
+    private void loadPlaces() {
+        android.widget.LinearLayout layout = findViewById(R.id.checkbox_list);
 
-        Place place2 = new Place("2", "Parc de la Mosson", 0, 43.6200, 3.8800, 2.0);
-        place2.addTag("loisirs");
-        place2.addTag("decouvertes");
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("Places").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                Place place = document.toObject(Place.class);
+                allPlaces.add(place);
+                selectedPlaces.add(place);
+                for (String pref : place.getTags()) {
+                    if (!preferences.containsKey(pref)) {
+                        CheckBox checkBox = new CheckBox(this);
+                        checkBox.setChecked(true);
+                        checkBox.setText(pref);
+                        layout.addView(checkBox);
+                        preferences.put(pref, checkBox);
+                    }
+                }
+            }
+        });
 
-        Place place3 = new Place("3", "Musée Fabre", 8.00, 43.6100, 3.8700, 2.5);
-        place3.addTag("culture");
-        place3.addTag("decouvertes");
-
-        Place place4 = new Place("4", "Café du Coin", 12.50, 43.6150, 3.8750, 1.0);
-        place4.addTag("restauration");
-        place4.addTag("loisirs");
-
-        Place place5 = new Place("5", "Promenade Peyrou", 0, 43.6120, 3.8690, 1.5);
-        place5.addTag("loisirs");
-        place5.addTag("decouvertes");
-
-        Place place6 = new Place("6", "Opéra Comédie", 15.00, 43.6090, 3.8800, 2.0);
-        place6.addTag("culture");
-
-        allPlaces.add(place1);
-        allPlaces.add(place2);
-        allPlaces.add(place3);
-        allPlaces.add(place4);
-        allPlaces.add(place5);
-        allPlaces.add(place6);
-
-        filteredPlaces.addAll(allPlaces);
         placeAdapter.notifyDataSetChanged();
-        updateResultCount();
     }
 
     private void setupListeners() {
@@ -133,73 +116,43 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         }
 
         FilterData filterData = collectFilterData();
-        applyFilters(filterData);
 
-        if (!filteredPlaces.isEmpty()) {
-            Intent intent = new Intent(this, TravelModeActivity.class);
-            // Optional: pass the filtered places so TravelMode can use them
-            // instead of its hardcoded sample data
-            intent.putParcelableArrayListExtra(
-                    TravelModeActivity.EXTRA_PLACES,
-                    new ArrayList<>(filteredPlaces)
-            );
-            startActivity(intent);
+        if (filterData.selectedPlaces.size() < filterData.nbActivites) {
+            Toast.makeText(this, "Veuillez sélectionner au moins " + filterData.nbActivites + " activité(s)", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "Aucun lieu trouvé", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, TravelModeActivity.class);
+
+            intent.putStringArrayListExtra("preferences", (ArrayList<String>) filterData.preferences);
+            intent.putExtra("nbActivites", filterData.nbActivites);
+            intent.putExtra("budgetMin", filterData.budgetMin);
+            intent.putExtra("budgetMax", filterData.budgetMax);
+            intent.putExtra("durationMin", filterData.durationMin);
+            intent.putExtra("durationMax", filterData.durationMax);
+            intent.putExtra("lengthMin", filterData.lengthMin);
+            intent.putExtra("lengthMax", filterData.lengthMax);
+            intent.putParcelableArrayListExtra("selectedPlaces", (ArrayList<? extends Parcelable>) filterData.selectedPlaces);
+
+            startActivity(intent);
         }
-    }
-
-    private void applyFilters(FilterData filterData) {
-        filteredPlaces.clear();
-
-        for (Place place : allPlaces) {
-            if (!filterData.preferences.isEmpty()) {
-                boolean matchesPreference = false;
-                for (String pref : filterData.preferences) {
-                    if (place.hasTag(pref)) {
-                        matchesPreference = true;
-                        break;
-                    }
-                }
-                if (!matchesPreference) continue;
-            }
-
-            if (filterData.budgetMin > 0 && place.getPrice() < filterData.budgetMin) {
-                continue;
-            }
-            if (filterData.budgetMax > 0 && place.getPrice() > filterData.budgetMax) {
-                continue;
-            }
-
-            if (filterData.durationMin > 0 && place.getUsualTimeSpentHours() < filterData.durationMin) {
-                continue;
-            }
-            if (filterData.durationMax > 0 && place.getUsualTimeSpentHours() > filterData.durationMax) {
-                continue;
-            }
-
-            filteredPlaces.add(place);
-        }
-
-        placeAdapter.notifyDataSetChanged();
-        updateResultCount();
-
-        String message = filteredPlaces.isEmpty() ? "Aucun lieu trouvé" : filteredPlaces.size() + " lieu(x) trouvé(s)";
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void handleReset() {
         clearAllFields();
-        filteredPlaces.clear();
-        filteredPlaces.addAll(allPlaces);
         placeAdapter.selectAll();
         placeAdapter.notifyDataSetChanged();
-        updateResultCount();
         selectedPlaces.clear();
         Toast.makeText(this, "Filtres réinitialisés", Toast.LENGTH_SHORT).show();
     }
 
     private boolean isFormValid() {
+        if (!editNbActivites.getText().toString().isEmpty()) {
+            try {
+                Integer.parseInt(editNbActivites.getText().toString());
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Format de nombre d'activités invalide", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
         if (!editBudgetMin.getText().toString().isEmpty() &&
                 !editBudgetMax.getText().toString().isEmpty()) {
             try {
@@ -251,10 +204,15 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
     private FilterData collectFilterData() {
         FilterData data = new FilterData();
 
-        if (checkboxRestauration.isChecked()) data.preferences.add("restauration");
-        if (checkboxLoisirs.isChecked()) data.preferences.add("loisirs");
-        if (checkboxDecouvertes.isChecked()) data.preferences.add("decouvertes");
-        if (checkboxCulture.isChecked()) data.preferences.add("culture");
+        for (Map.Entry<String, CheckBox> entry : preferences.entrySet()) {
+            if (entry.getValue().isChecked()) {
+                data.preferences.add(entry.getKey());
+            }
+        }
+
+        if (!editNbActivites.getText().toString().isEmpty()) {
+            data.nbActivites = Integer.parseInt(editNbActivites.getText().toString());
+        }
 
         if (!editBudgetMin.getText().toString().isEmpty()) {
             data.budgetMin = Double.parseDouble(editBudgetMin.getText().toString());
@@ -277,14 +235,15 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
             data.lengthMax = Double.parseDouble(editLengthMax.getText().toString());
         }
 
+        data.selectedPlaces = this.getSelectedPlaces();
+
         return data;
     }
 
     private void clearAllFields() {
-        checkboxRestauration.setChecked(false);
-        checkboxLoisirs.setChecked(false);
-        checkboxDecouvertes.setChecked(false);
-        checkboxCulture.setChecked(false);
+        for (Map.Entry<String, CheckBox> entry : preferences.entrySet()) {
+            entry.getValue().setChecked(false);
+        }
 
         editBudgetMin.setText("");
         editBudgetMax.setText("");
@@ -292,12 +251,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         editDurationMax.setText("");
         editLengthMin.setText("");
         editLengthMax.setText("");
-    }
-
-    private void updateResultCount() {
-        int count = filteredPlaces.size();
-        String text = count + (count == 1 ? " lieu" : " lieux");
-        textResultCount.setText(text);
     }
 
     @Override
@@ -309,7 +262,6 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
         } else {
             selectedPlaces.remove(place);
         }
-        android.util.Log.d("PlaceSelection", "Selected places: " + selectedPlaces.size());
     }
 
     @Override
@@ -325,11 +277,14 @@ public class TravelPathActivity extends AppCompatActivity implements PlaceAdapte
 
     public static class FilterData {
         public List<String> preferences = new ArrayList<>();
+        public int nbActivites = 0;
         public double budgetMin = 0;
         public double budgetMax = 0;
         public double durationMin = 0;
         public double durationMax = 0;
         public double lengthMin = 0;
         public double lengthMax = 0;
+
+        public List<Place> selectedPlaces;
     }
 }

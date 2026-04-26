@@ -7,7 +7,6 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
 public class Place implements Parcelable {
-    private String id;
     private String name;
     private List<String> tags;
     private double price;
@@ -22,7 +21,6 @@ public class Place implements Parcelable {
     }
 
     protected Place(Parcel in) {
-        id = in.readString();
         name = in.readString();
         tags = in.createStringArrayList();
         price = in.readDouble();
@@ -30,25 +28,6 @@ public class Place implements Parcelable {
         longitude = in.readDouble();
         usualTimeSpentHours = in.readDouble();
         selected = in.readByte() != 0;
-    }
-
-    public Place(String id, String name, double price, double latitude, double longitude, double usualTimeSpentHours) {
-        this.id = id;
-        this.name = name;
-        this.tags = new ArrayList<>();
-        this.price = price;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.usualTimeSpentHours = usualTimeSpentHours;
-        this.selected = true;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -63,54 +42,20 @@ public class Place implements Parcelable {
         return tags;
     }
 
-    public void setTags(List<String> tags) {
-        this.tags = tags;
-    }
-
-    public void addTag(String tag) {
-        if (!this.tags.contains(tag)) {
-            this.tags.add(tag);
-        }
-    }
-
-    public void removeTag(String tag) {
-        this.tags.remove(tag);
-    }
-
-    public boolean hasTag(String tag) {
-        return this.tags.contains(tag);
-    }
-
     public double getPrice() {
         return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
     }
 
     public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
     public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
     public double getUsualTimeSpentHours() {
         return usualTimeSpentHours;
-    }
-
-    public void setUsualTimeSpentHours(double usualTimeSpentHours) {
-        this.usualTimeSpentHours = usualTimeSpentHours;
     }
 
     public boolean isSelected() {
@@ -143,11 +88,14 @@ public class Place implements Parcelable {
         return String.join(", ", tags);
     }
 
+    public double getDistance(Place other) {
+        return Math.sqrt((this.latitude - other.latitude) * (this.latitude - other.latitude) + (this.longitude - other.longitude) * (this.longitude - other.longitude)) * 111;
+    }
+
     @Override
     public String toString() {
         return "Place{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", tags=" + tags +
                 ", price=" + price +
                 ", latitude=" + latitude +
@@ -164,12 +112,7 @@ public class Place implements Parcelable {
 
         Place place = (Place) o;
 
-        return id.equals(place.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return id.hashCode();
+        return name.equals(place.name);
     }
 
     @Override
@@ -179,7 +122,6 @@ public class Place implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int i) {
-        dest.writeString(id);
         dest.writeString(name);
         dest.writeStringList(tags);
         dest.writeDouble(price);
