@@ -20,7 +20,6 @@
             android:textColor="#1a1a1a"
             android:layout_marginBottom="24dp" />
 
-        <!-- ÉCONOMIQUE -->
         <LinearLayout
             android:id="@+id/card_economique"
             android:layout_width="match_parent"
@@ -126,7 +125,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ÉQUILIBRÉ -->
         <LinearLayout
             android:id="@+id/card_equilibre"
             android:layout_width="match_parent"
@@ -232,7 +230,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- CONFORT -->
         <LinearLayout
             android:id="@+id/card_confort"
             android:layout_width="match_parent"

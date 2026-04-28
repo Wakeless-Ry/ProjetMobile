@@ -108,6 +108,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         private TextView textPrice;
         private TextView textLocation;
         private TextView textTimeSpent;
+        private TextView horaire;
         private Place currentPlace;
 
         public PlaceViewHolder(@NonNull View itemView, boolean setCheckboxes) {
@@ -121,6 +122,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
             textPrice = itemView.findViewById(R.id.text_price);
             textLocation = itemView.findViewById(R.id.text_location);
             textTimeSpent = itemView.findViewById(R.id.text_time_spent);
+            horaire = itemView.findViewById(R.id.text_horaires);
 
             checkboxPlace.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (currentPlace != null) {
@@ -148,6 +150,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
             textPrice.setText(place.getFormattedPrice());
             textLocation.setText(place.getFormattedLocation());
             textTimeSpent.setText(place.getFormattedTimeSpent());
+            horaire.setText(place.getHorairesAsString());
 
             checkboxPlace.setOnCheckedChangeListener(null);
             checkboxPlace.setChecked(place.isSelected());

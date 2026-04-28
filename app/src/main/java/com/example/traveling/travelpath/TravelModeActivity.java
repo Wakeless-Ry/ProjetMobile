@@ -6,18 +6,23 @@ import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.traveling.R;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class TravelModeActivity extends AppCompatActivity {
+    TravelPathActivity.FilterData filterData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.tp_parcours_viewer);
 
-        TravelPathActivity.FilterData filterData = this.getFilterData();
+        filterData = this.getFilterData();
 
         TroisParcours troisParcours = buildParcours(filterData);
 
@@ -55,17 +60,19 @@ public class TravelModeActivity extends AppCompatActivity {
 
         filterData.preferences = intent.getStringArrayListExtra("preferences");
         filterData.nbActivites = intent.getIntExtra("nbActivites", 0);
+        filterData.horaireDepart = intent.getDoubleExtra("horaireDepart", 0);
+        filterData.horaireMax = intent.getDoubleExtra("horaireMax", 0);
         filterData.budgetMin = intent.getDoubleExtra("budgetMin", 0);
         filterData.budgetMax = intent.getDoubleExtra("budgetMax", 0);
         filterData.durationMin = intent.getDoubleExtra("durationMin", 0);
         filterData.durationMax = intent.getDoubleExtra("durationMax", 0);
         filterData.lengthMin = intent.getDoubleExtra("lengthMin", 0);
         filterData.lengthMax = intent.getDoubleExtra("lengthMax", 0);
-        List<Place> places = intent.getParcelableArrayListExtra("selectedPlaces");
+        String json = intent.getStringExtra("selectedPlaces");
+        List<Place> places = new Gson().fromJson(json, new TypeToken<List<Place>>(){}.getType());
         filterData.selectedPlaces = new ArrayList<>();
 
         for (Place place : places) {
-            System.out.println(place);
             for (String tag : filterData.preferences) {
                 if (place.getTags().contains(tag) && !filterData.selectedPlaces.contains(place)) {
                     filterData.selectedPlaces.add(place);
@@ -101,7 +108,8 @@ public class TravelModeActivity extends AppCompatActivity {
         card.setOnClickListener(v -> {
             Intent intent = new Intent(this, PlaceListActivity.class);
             intent.putExtra("extra_mode", mode);
-            intent.putParcelableArrayListExtra("extra_places", new ArrayList<>(places));
+            intent.putExtra("horaire_depart", filterData.horaireDepart);
+            intent.putExtra("extra_places", new Gson().toJson(places)); // ← JSON instead
             startActivity(intent);
         });
     }
@@ -133,7 +141,7 @@ public class TravelModeActivity extends AppCompatActivity {
     private TroisParcours buildParcours(TravelPathActivity.FilterData filterData) {
         TroisParcours troisParcours = new TroisParcours();
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10000; i++) {
             Parcours parcours = generateParcours(filterData);
 
             if (parcours.isValid(filterData)) {
@@ -202,7 +210,32 @@ public class TravelModeActivity extends AppCompatActivity {
         }
 
         public boolean isValid(TravelPathActivity.FilterData filterData) {
-            return this.getPrice() >= filterData.budgetMin
+            boolean horairesValid = true;
+
+            double currentTime = filterData.horaireDepart;
+
+            for (int i = 0; i < this.size() - 1; i++) {
+                Place place = this.get(i);
+
+                if (!place.isValidTime(currentTime)){
+                    horairesValid = false;
+                    break;
+                }
+
+                currentTime += place.getUsualTimeSpentHours();
+                currentTime += place.getTimeBetween(this.get(i + 1));
+            }
+
+            Place lastPlace = this.get(this.size() - 1);
+
+            if (!lastPlace.isValidTime(currentTime)){
+                horairesValid = false;
+            }
+            currentTime += lastPlace.getUsualTimeSpentHours();
+
+            horairesValid &= currentTime <= filterData.horaireMax;
+
+            return horairesValid && this.getPrice() >= filterData.budgetMin
                     && this.getPrice() <= filterData.budgetMax
                     && this.getDuration() >= filterData.durationMin
                     && this.getDuration() <= filterData.durationMax

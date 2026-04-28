@@ -1,23 +1,31 @@
 package com.example.traveling.travelpath;
 
 import java.util.ArrayList;
-import java.util.List;import android.os.Parcel;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 public class Place implements Parcelable {
+    private boolean selected;
     private String name;
-    private List<String> tags;
     private double price;
     private double latitude;
     private double longitude;
     private double usualTimeSpentHours;
-    private boolean selected;
+    private List<String> tags;
+    private List<Map<String, Double>> horaires;
 
     public Place() {
-        this.tags = new ArrayList<>();
         this.selected = true;
+        this.tags = new ArrayList<>();
+        this.horaires = new ArrayList<>();
     }
 
     protected Place(Parcel in) {
@@ -28,6 +36,21 @@ public class Place implements Parcelable {
         longitude = in.readDouble();
         usualTimeSpentHours = in.readDouble();
         selected = in.readByte() != 0;
+        horaires = new ArrayList<>();
+        int nbHoraires = in.readInt();
+
+        for (int i = 0; i < nbHoraires; i++) {
+            Map<String, Double> map = new HashMap<>();
+
+            map.put("debut", in.readDouble());
+            map.put("fin", in.readDouble());
+
+            horaires.add(map);
+        }
+    }
+
+    public void fillHoraires(QueryDocumentSnapshot document) {
+        this.horaires.addAll(((List<Map<String, Double>>) document.getData().get("horaires")));
     }
 
     public String getName() {
@@ -88,8 +111,48 @@ public class Place implements Parcelable {
         return String.join(", ", tags);
     }
 
+    public String getHorairesAsString() {
+        if (this.horaires.size() == 1 && this.horaires.get(0).get("debut") == 0 && this.horaires.get(0).get("fin") == 24) {
+            return "Toujours ouvert";
+        }
+
+        String str = "";
+
+        for (int i = 0; i < this.horaires.size(); i++) {
+            double debut = this.horaires.get(i).get("debut");
+            double fin = this.horaires.get(i).get("fin");
+
+            str += String.format("%02.0f:%02.0f-%02.0f:%02.0f",
+                    Math.floor(debut),
+                    (debut - Math.floor(debut)) * 60,
+                    Math.floor(fin),
+                    (fin - Math.floor(fin)) * 60
+            );
+
+            if (i != this.horaires.size() - 1) {
+                str += ", ";
+            }
+        }
+
+        return str;
+    }
+
     public double getDistance(Place other) {
         return Math.sqrt((this.latitude - other.latitude) * (this.latitude - other.latitude) + (this.longitude - other.longitude) * (this.longitude - other.longitude)) * 111;
+    }
+
+    public double getTimeBetween(Place other) {
+        return getDistance(other) / 4;
+    }
+
+    public boolean isValidTime(double time) {
+        for (Map<String, Double> horaire : horaires) {
+            if (horaire.get("debut") <= time && time < horaire.get("fin")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -129,6 +192,12 @@ public class Place implements Parcelable {
         dest.writeDouble(longitude);
         dest.writeDouble(usualTimeSpentHours);
         dest.writeByte((byte) (selected ? 1 : 0));
+
+        dest.writeInt(horaires.size());
+        for (final Map<String, Double> horaire : horaires) {
+            dest.writeDouble(horaire.get("debut"));
+            dest.writeDouble(horaire.get("fin"));
+        }
     }
 
     public static final Creator<Place> CREATOR = new Creator<Place>() {
