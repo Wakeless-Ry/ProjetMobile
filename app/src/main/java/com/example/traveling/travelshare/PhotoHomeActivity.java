@@ -12,6 +12,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,6 +33,7 @@ import java.util.List;
 
 public class PhotoHomeActivity extends AppCompatActivity {
 
+    private static final String TAG = "PhotoHomeActivity";
     private EditText etSearch;
     private Spinner spinnerFilter, spinnerFilterGroup;
     private Button btnSearch, btnRandom, btnLogin, btnFilters;
@@ -72,6 +75,9 @@ public class PhotoHomeActivity extends AppCompatActivity {
         filterPanel   = findViewById(R.id.filter_panel);
         fabPublish    = findViewById(R.id.fab_publish);
         bottomNav     = findViewById(R.id.bottom_navigation);
+        
+        // On essaie de trouver un ProgressBar s'il existe dans le layout
+        // progressBar = findViewById(R.id.progress_bar); // Commenté car peut ne pas exister
 
         firestoreManager = new FirestoreManager();
         setupBottomNav();
@@ -84,6 +90,7 @@ public class PhotoHomeActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedLocationType = LOCATION_VALUES[position];
+                Log.d(TAG, "Location filter changed to: " + selectedLocationType);
                 performSearch(); // Auto-refresh
             }
             @Override public void onNothingSelected(AdapterView<?> parent) {}
@@ -93,23 +100,30 @@ public class PhotoHomeActivity extends AppCompatActivity {
 
         // RecyclerView grille 2 colonnes
         adapter = new PhotoAdapter(this, new ArrayList<>(), photo -> {
-            Intent intent = new Intent(this, PhotoDetailActivity.class);
-            intent.putExtra("photoId", photo.getId());
-            startActivity(intent);
+            if (photo != null && photo.getId() != null) {
+                Intent intent = new Intent(this, PhotoDetailActivity.class);
+                intent.putExtra("photoId", photo.getId());
+                startActivity(intent);
+            }
         });
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         recyclerView.setAdapter(adapter);
 
-        updatePhotoCount(allPhotos.size());
+        updatePhotoCount(0);
 
         // Boutons
         btnSearch.setOnClickListener(v -> performSearch());
         btnRandom.setOnClickListener(v -> performRandom());
-        findViewById(R.id.btn_voice).setOnClickListener(v -> {
-            Toast.makeText(this, "Simulation: Écoute vocale...", Toast.LENGTH_SHORT).show();
-            etSearch.setText("Tour Eiffel");
-            performSearch();
-        });
+        
+        View btnVoice = findViewById(R.id.btn_voice);
+        if (btnVoice != null) {
+            btnVoice.setOnClickListener(v -> {
+                Toast.makeText(this, "Simulation: Écoute vocale...", Toast.LENGTH_SHORT).show();
+                etSearch.setText("Tour Eiffel");
+                performSearch();
+            });
+        }
+        
         btnFilters.setOnClickListener(v -> toggleFilters());
         fabPublish.setOnClickListener(v -> startActivity(new Intent(this, PublishActivity.class)));
 
@@ -131,14 +145,19 @@ public class PhotoHomeActivity extends AppCompatActivity {
     }
 
     private void setupGroupFilterSpinner() {
+        Log.d(TAG, "Setting up group filter spinner");
         firestoreManager.getAllGroups(new FirestoreManager.OnDataLoadedListener<List<Group>>() {
             @Override
             public void onSuccess(List<Group> groups) {
+                if (isFinishing()) return;
+                
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 List<Group> joinedGroups = new ArrayList<>();
-                if (user != null) {
+                if (user != null && groups != null) {
                     for (Group g : groups) {
-                        if (g.getMemberIds().contains(user.getUid())) joinedGroups.add(g);
+                        if (g != null && g.getMemberIds() != null && g.getMemberIds().contains(user.getUid())) {
+                            joinedGroups.add(g);
+                        }
                     }
                 }
 
@@ -162,7 +181,10 @@ public class PhotoHomeActivity extends AppCompatActivity {
                     @Override
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                         if (position == 0) selectedGroupId = "all";
-                        else selectedGroupId = joinedGroups.get(position - 1).getId();
+                        else if (position - 1 < joinedGroups.size()) {
+                            selectedGroupId = joinedGroups.get(position - 1).getId();
+                        }
+                        Log.d(TAG, "Group filter changed to: " + selectedGroupId);
                         performSearch();
                     }
                     @Override public void onNothingSelected(AdapterView<?> parent) {}
@@ -171,7 +193,10 @@ public class PhotoHomeActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                spinnerFilterGroup.setVisibility(View.GONE);
+                Log.e(TAG, "Error loading groups for filter: " + e.getMessage());
+                if (!isFinishing()) {
+                    spinnerFilterGroup.setVisibility(View.GONE);
+                }
             }
         });
     }
@@ -180,7 +205,6 @@ public class PhotoHomeActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
-                // Déjà ici, on peut scroller en haut ou rafraîchir
                 recyclerView.smoothScrollToPosition(0);
                 return true;
             }
@@ -220,12 +244,11 @@ public class PhotoHomeActivity extends AppCompatActivity {
         if (loggedIn) {
             btnLogin.setText("Déconnexion");
             btnLogin.setOnClickListener(v -> {
-                // Déconnexion réelle
                 FirebaseAuth.getInstance().signOut();
-                // Déconnexion simulation
                 prefs.edit().clear().apply();
                 updateLoginButton();
                 Toast.makeText(this, "Déconnecté", Toast.LENGTH_SHORT).show();
+                performSearch();
             });
         } else {
             btnLogin.setText("Connexion");
@@ -237,26 +260,29 @@ public class PhotoHomeActivity extends AppCompatActivity {
     private void performSearch() {
         if (firestoreManager == null) return;
         
-        String query = etSearch.getText().toString().trim();
+        String queryText = etSearch.getText().toString().trim();
+        Log.d(TAG, "Performing search with query: " + queryText + ", group: " + selectedGroupId + ", type: " + selectedLocationType);
         
-        // On affiche un indicateur de chargement si nécessaire, ou on vide la liste
-        adapter.updatePhotos(new ArrayList<>()); 
-
         firestoreManager.getPhotos(selectedGroupId, selectedLocationType, new FirestoreManager.OnDataLoadedListener<List<Photo>>() {
             @Override
             public void onSuccess(List<Photo> photos) {
-                allPhotos = photos;
+                if (isFinishing()) return;
                 
-                // Filtrage local pour la recherche textuelle (titre/description)
+                allPhotos = (photos != null) ? photos : new ArrayList<>();
+                Log.d(TAG, "Firestore returned " + allPhotos.size() + " photos");
+                
                 List<Photo> filtered = new ArrayList<>();
-                if (query.isEmpty()) {
-                    filtered = photos;
+                if (queryText.isEmpty()) {
+                    filtered = allPhotos;
                 } else {
-                    String q = query.toLowerCase();
-                    for (Photo p : photos) {
-                        if (p.getTitle().toLowerCase().contains(q) || 
-                            p.getDescription().toLowerCase().contains(q) ||
-                            (p.getTags() != null && p.getTags().toString().toLowerCase().contains(q))) {
+                    String q = queryText.toLowerCase();
+                    for (Photo p : allPhotos) {
+                        if (p == null) continue;
+                        boolean matchesTitle = p.getTitle() != null && p.getTitle().toLowerCase().contains(q);
+                        boolean matchesDesc = p.getDescription() != null && p.getDescription().toLowerCase().contains(q);
+                        boolean matchesTags = p.getTags() != null && p.getTags().toString().toLowerCase().contains(q);
+                        
+                        if (matchesTitle || matchesDesc || matchesTags) {
                             filtered.add(p);
                         }
                     }
@@ -268,7 +294,14 @@ public class PhotoHomeActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(PhotoHomeActivity.this, "Erreur Firestore : " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                if (isFinishing()) return;
+                
+                Log.e(TAG, "Search error: " + e.getMessage());
+                Toast.makeText(PhotoHomeActivity.this, "Impossible de charger les photos : " + e.getMessage(), Toast.LENGTH_LONG).show();
+                
+                // On vide la liste en cas d'erreur pour éviter d'afficher des données obsolètes
+                adapter.updatePhotos(new ArrayList<>());
+                updatePhotoCount(0);
             }
         });
     }
@@ -280,6 +313,8 @@ public class PhotoHomeActivity extends AppCompatActivity {
             adapter.updatePhotos(shuffled);
             updatePhotoCount(shuffled.size());
             Toast.makeText(this, "Photos mélangées !", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Aucune photo à mélanger", Toast.LENGTH_SHORT).show();
         }
     }
 

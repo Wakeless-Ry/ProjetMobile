@@ -10,6 +10,8 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.traveling.R;
@@ -31,6 +33,7 @@ import java.util.UUID;
 
 public class PublishActivity extends AppCompatActivity {
 
+    private static final String TAG = "PublishActivity";
     private EditText etTitle, etDescription, etLocationName;
     private Spinner spinnerCategory, spinnerGroup;
     private ImageView ivPreview;
@@ -57,14 +60,18 @@ public class PublishActivity extends AppCompatActivity {
 
         btnPublish.setOnClickListener(v -> handlePublish());
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-        findViewById(R.id.btn_voice_desc).setOnClickListener(v -> {
-            Toast.makeText(this, "Simulation: Écoute en cours...", Toast.LENGTH_SHORT).show();
-            etDescription.setText("C'était un moment inoubliable passé ici.");
-        });
+        
+        View btnVoice = findViewById(R.id.btn_voice_desc);
+        if (btnVoice != null) {
+            btnVoice.setOnClickListener(v -> {
+                Toast.makeText(this, "Simulation: Écoute en cours...", Toast.LENGTH_SHORT).show();
+                etDescription.setText("C'était un moment inoubliable passé ici.");
+            });
+        }
+        
         findViewById(R.id.card_image).setOnClickListener(v -> {
             Toast.makeText(this, "Simulation: Photo sélectionnée", Toast.LENGTH_SHORT).show();
             ivPreview.setAlpha(1.0f);
-            // Dans un vrai cas, on ouvrirait la galerie ici
         });
     }
 
@@ -79,24 +86,31 @@ public class PublishActivity extends AppCompatActivity {
     }
 
     private void setupGroupSpinner() {
+        Log.d(TAG, "Loading groups for spinner");
         firestoreManager.getAllGroups(new FirestoreManager.OnDataLoadedListener<List<Group>>() {
             @Override
             public void onSuccess(List<Group> groups) {
+                if (isFinishing()) return;
+                
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 userGroups = new ArrayList<>();
-                if (user != null) {
+                if (user != null && groups != null) {
                     for (Group g : groups) {
-                        if (g.getMemberIds().contains(user.getUid())) userGroups.add(g);
+                        if (g != null && g.getMemberIds() != null && g.getMemberIds().contains(user.getUid())) {
+                            userGroups.add(g);
+                        }
                     }
                 }
 
                 if (userGroups.isEmpty()) {
-                    findViewById(R.id.tv_group_label).setVisibility(View.GONE);
+                    View label = findViewById(R.id.tv_group_label);
+                    if (label != null) label.setVisibility(View.GONE);
                     spinnerGroup.setVisibility(View.GONE);
                     return;
                 }
 
-                findViewById(R.id.tv_group_label).setVisibility(View.VISIBLE);
+                View label = findViewById(R.id.tv_group_label);
+                if (label != null) label.setVisibility(View.VISIBLE);
                 spinnerGroup.setVisibility(View.VISIBLE);
 
                 List<String> groupNames = new ArrayList<>();
@@ -111,8 +125,12 @@ public class PublishActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                findViewById(R.id.tv_group_label).setVisibility(View.GONE);
-                spinnerGroup.setVisibility(View.GONE);
+                Log.e(TAG, "Error loading groups: " + e.getMessage());
+                if (!isFinishing()) {
+                    View label = findViewById(R.id.tv_group_label);
+                    if (label != null) label.setVisibility(View.GONE);
+                    spinnerGroup.setVisibility(View.GONE);
+                }
             }
         });
     }
@@ -134,66 +152,79 @@ public class PublishActivity extends AppCompatActivity {
             return;
         }
 
-        // Récupérer l'utilisateur connecté
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        
         if (user == null) {
             Toast.makeText(this, "Vous devez être connecté pour publier", Toast.LENGTH_SHORT).show();
-            finish();
             return;
         }
 
-        String userName = user.getDisplayName() != null && !user.getDisplayName().isEmpty() ? user.getDisplayName() : user.getEmail();
-        String userId = user.getUid();
+        try {
+            String userName = user.getDisplayName();
+            if (userName == null || userName.isEmpty()) userName = user.getEmail();
+            if (userName == null || userName.isEmpty()) userName = "Voyageur";
+            
+            String userId = user.getUid();
 
-        Author author = new Author(userId, userName, "https://api.dicebear.com/7.x/avataaars/svg?seed=" + userName);
+            Author author = new Author(userId, userName, "https://api.dicebear.com/7.x/avataaars/svg?seed=" + userName);
 
-        String id = UUID.randomUUID().toString();
-        String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(new Date());
+            String id = UUID.randomUUID().toString();
+            String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(new Date());
 
-        // Image par défaut pour la simulation
-        String imageUrl = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800";
+            String imageUrl = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800";
 
-        String selectedGroupId = null;
-        int groupPos = spinnerGroup.getVisibility() == View.VISIBLE ? spinnerGroup.getSelectedItemPosition() : 0;
-        if (groupPos > 0) {
-            selectedGroupId = userGroups.get(groupPos - 1).getId();
+            String selectedGroupId = "all";
+            int groupPos = spinnerGroup.getVisibility() == View.VISIBLE ? spinnerGroup.getSelectedItemPosition() : 0;
+            if (groupPos > 0 && userGroups != null && groupPos - 1 < userGroups.size()) {
+                selectedGroupId = userGroups.get(groupPos - 1).getId();
+            }
+
+            int catPos = spinnerCategory.getSelectedItemPosition();
+            if (catPos < 0) catPos = 0;
+            String catValue = CATEGORY_VALUES[catPos];
+
+            Photo newPhoto = new Photo(
+                    id,
+                    imageUrl,
+                    title,
+                    desc,
+                    new PhotoLocation(loc, 43.6108, 3.8767, false),
+                    date,
+                    "Récemment",
+                    new ArrayList<>(),
+                    "Non spécifié",
+                    author,
+                    Arrays.asList(catValue, "voyage"),
+                    catValue,
+                    0,
+                    false,
+                    groupPos == 0,
+                    timestamp,
+                    selectedGroupId
+            );
+
+            Log.d(TAG, "Attempting to publish photo: " + id);
+            btnPublish.setEnabled(false);
+            
+            firestoreManager.addPhoto(newPhoto, new FirestoreManager.OnDataLoadedListener<Void>() {
+                @Override
+                public void onSuccess(Void data) {
+                    if (isFinishing()) return;
+                    Toast.makeText(PublishActivity.this, "Photo publiée avec succès !", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Log.e(TAG, "Publish error: " + e.getMessage());
+                    if (isFinishing()) return;
+                    btnPublish.setEnabled(true);
+                    Toast.makeText(PublishActivity.this, "Erreur lors de la publication : " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error building photo object: " + e.getMessage());
+            Toast.makeText(this, "Erreur interne lors de la création de la publication", Toast.LENGTH_SHORT).show();
         }
-
-        Photo newPhoto = new Photo(
-                id,
-                imageUrl,
-                title,
-                desc,
-                new PhotoLocation(loc, 43.6108, 3.8767, false), // Coordonnées par défaut (Montpellier)
-                date,
-                "Récemment",
-                new ArrayList<>(),
-                "Non spécifié",
-                author,
-                Arrays.asList(CATEGORY_VALUES[spinnerCategory.getSelectedItemPosition()], "voyage"),
-                CATEGORY_VALUES[spinnerCategory.getSelectedItemPosition()],
-                0,
-                false,
-                groupPos == 0, // Public si aucun groupe sélectionné
-                timestamp,
-                selectedGroupId
-        );
-
-        btnPublish.setEnabled(false);
-        firestoreManager.addPhoto(newPhoto, new FirestoreManager.OnDataLoadedListener<Void>() {
-            @Override
-            public void onSuccess(Void data) {
-                Toast.makeText(PublishActivity.this, "Photo publiée avec succès !", Toast.LENGTH_LONG).show();
-                finish();
-            }
-
-            @Override
-            public void onError(Exception e) {
-                btnPublish.setEnabled(true);
-                Toast.makeText(PublishActivity.this, "Erreur lors de la publication", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 }
