@@ -2,6 +2,7 @@ package com.example.traveling.travelshare.data;
 
 
 import com.example.traveling.travelshare.model.Author;
+import com.example.traveling.travelshare.model.Group;
 import com.example.traveling.travelshare.model.Photo;
 import com.example.traveling.travelshare.model.PhotoLocation;
 
@@ -12,7 +13,63 @@ import java.util.List;
 
 public class SampleData {
 
+    private static List<Photo> cachedPhotos = null;
+    private static List<Group> cachedGroups = null;
+    private static List<String> joinedGroupIds = new ArrayList<>();
+
+    public static List<Group> getJoinedGroups() {
+        List<Group> joined = new ArrayList<>();
+        if (cachedGroups == null) getGroups();
+        for (Group g : cachedGroups) {
+            if (joinedGroupIds.contains(g.getId())) joined.add(g);
+        }
+        return joined;
+    }
+
+    public static List<Group> getDiscoverGroups() {
+        List<Group> discover = new ArrayList<>();
+        if (cachedGroups == null) getGroups();
+        for (Group g : cachedGroups) {
+            if (!joinedGroupIds.contains(g.getId())) discover.add(g);
+        }
+        return discover;
+    }
+
+    public static void joinGroup(String groupId) {
+        if (!joinedGroupIds.contains(groupId)) {
+            joinedGroupIds.add(groupId);
+        }
+    }
+
+    public static void leaveGroup(String groupId) {
+        joinedGroupIds.remove(groupId);
+    }
+
+    public static boolean isJoined(String groupId) {
+        return joinedGroupIds.contains(groupId);
+    }
+
+    public static List<Group> getGroups() {
+        if (cachedGroups != null) return cachedGroups;
+
+        cachedGroups = new ArrayList<>();
+        cachedGroups.add(new Group("g1", "Randonneurs du Pic St-Loup", "Pour ceux qui aiment l'Hérault", "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400"));
+        cachedGroups.add(new Group("g2", "Montpellier Photo Club", "Capturer la surdouée", "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400"));
+        cachedGroups.add(new Group("g3", "Foodies du Clapas", "Les meilleures tables de Montpellier", "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400"));
+        
+        return cachedGroups;
+    }
+
+    public static void addGroup(Group group) {
+        if (cachedGroups == null) {
+            getGroups();
+        }
+        cachedGroups.add(0, group);
+    }
+
     public static List<Photo> getAllPhotos() {
+        if (cachedPhotos != null) return cachedPhotos;
+
         List<Photo> photos = new ArrayList<>();
 
         Author marie   = new Author("user_1", "Marie Dubois",   "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie");
@@ -24,125 +81,174 @@ public class SampleData {
 
         photos.add(new Photo(
                 "photo_1",
-                "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=800",
-                "Tour Eiffel au coucher du soleil",
-                "Vue magnifique de la Tour Eiffel illuminée pendant le coucher du soleil depuis le Trocadéro",
-                new PhotoLocation("Tour Eiffel, Paris", 48.8584, 2.2945, false),
+                "https://images.unsplash.com/photo-1563905317-d736775aa713?w=800",
+                "Place de la Comédie au crépuscule",
+                "L'Opéra Comédie illuminé sous un ciel rose magnifique.",
+                new PhotoLocation("Place de la Comédie, Montpellier", 43.6085, 3.8794, false),
                 "2024-06-15", "Été 2024",
-                Arrays.asList("Quelle vue incroyable !", "J'y étais la semaine dernière"),
-                "Métro ligne 6 - Station Trocadéro, puis 5 minutes à pied",
+                Arrays.asList("L'endroit emblématique !", "J'y bois mon café tous les matins"),
+                "Tram ligne 1 ou 2 - Arrêt Comédie",
                 marie,
-                Arrays.asList("tour eiffel", "paris", "coucher de soleil", "romantique"),
+                Arrays.asList("comedie", "montpellier", "centre-ville", "opera"),
                 "monument", 234, false, true, "2024-06-15T18:30:00Z"
         ));
 
         photos.add(new Photo(
                 "photo_2",
-                "https://images.unsplash.com/photo-1696079196661-a5cbfb884255?w=800",
-                "Jardin du Luxembourg en fleurs",
-                "Les magnifiques parterres de fleurs du Jardin du Luxembourg au printemps",
-                new PhotoLocation("Jardin du Luxembourg, Paris", 48.8462, 2.3372, false),
+                "https://images.unsplash.com/photo-1627918803730-8025e1730d1d?w=800",
+                "Balade au Peyrou",
+                "Vue sur l'aqueduc des Arceaux depuis la promenade du Peyrou.",
+                new PhotoLocation("Promenade du Peyrou, Montpellier", 43.6111, 3.8703, false),
                 "2024-04-20", "Printemps 2024",
-                Arrays.asList("Les couleurs sont superbes", "Mon parc préféré à Paris"),
-                "RER B - Station Luxembourg",
+                Arrays.asList("Le plus beau coucher de soleil"),
+                "Tram ligne 4 - Arrêt Peyrou - Arc de Triomphe",
                 thomas,
-                Arrays.asList("jardin", "nature", "fleurs", "printemps"),
+                Arrays.asList("peyrou", "nature", "panorama", "histoire"),
                 "nature", 189, true, true, "2024-04-20T14:00:00Z"
         ));
 
         photos.add(new Photo(
                 "photo_3",
-                "https://images.unsplash.com/photo-1729722189474-2c021a2cf80c?w=800",
-                "Musée du Louvre - Pyramide",
-                "La célèbre pyramide de verre du Louvre avec reflets",
-                new PhotoLocation("Musée du Louvre, Paris", 48.8606, 2.3376, false),
+                "https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?w=800",
+                "Quartier Antigone - Architecture",
+                "Les courbes néoclassiques du quartier Ricardo Bofill.",
+                new PhotoLocation("Antigone, Montpellier", 43.6078, 3.8895, false),
                 "2024-05-10", "Printemps 2024",
-                Arrays.asList("Architecture moderne et classique", "Moins de monde que d'habitude"),
-                "Métro ligne 1 - Station Palais Royal - Musée du Louvre",
+                Arrays.asList("On se croirait en Grèce !"),
+                "Tram ligne 1 - Arrêt Antigone ou Place de l'Europe",
                 sophie,
-                Arrays.asList("louvre", "musée", "architecture", "pyramide"),
+                Arrays.asList("antigone", "architecture", "bofill"),
                 "monument", 456, false, true, "2024-05-10T11:30:00Z"
         ));
 
         photos.add(new Photo(
                 "photo_4",
-                "https://images.unsplash.com/photo-1762922425226-8cfe6987e7b0?w=800",
-                "Café parisien typique",
-                "Terrasse d'un café traditionnel dans le Marais",
-                new PhotoLocation("Le Marais, Paris", 48.8566, 2.3622, true),
+                "https://images.unsplash.com/photo-1549413289-53e7784f1f50?w=800",
+                "Terrasses St-Roch",
+                "Petite ruelle pleine de charme près de l'église Saint-Roch.",
+                new PhotoLocation("Quartier Saint-Roch, Montpellier", 43.6074, 3.8767, true),
                 "2024-07-01", "Été 2024",
-                Arrays.asList("Ambiance authentique", "Excellent café"),
-                "Métro ligne 1 - Station Saint-Paul",
+                Arrays.asList("Ambiance authentique", "Les restos sont top ici"),
+                "Centre piétonnier",
                 pierre,
-                Arrays.asList("café", "marais", "terrasse", "culture"),
+                Arrays.asList("saint-roch", "ruelles", "terrasse", "culture"),
                 "restaurant", 167, true, true, "2024-07-01T09:00:00Z"
         ));
 
         photos.add(new Photo(
                 "photo_5",
-                "https://images.unsplash.com/photo-1759299983432-e0097fad9b15?w=800",
-                "Boutiques des Champs-Élysées",
-                "Avenue des Champs-Élysées illuminée le soir",
-                new PhotoLocation("Champs-Élysées, Paris", 48.8698, 2.3078, false),
-                "2024-12-20", "Hiver 2024",
-                Arrays.asList("Décorations de Noël magnifiques", "Shopping de luxe"),
-                "Métro ligne 1 - Station George V",
+                "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=800",
+                "Zoo de Lunaret",
+                "Un flamant rose au milieu de la végétation luxuriante.",
+                new PhotoLocation("Zoo de Montpellier", 43.6395, 3.8736, false),
+                "2024-06-20", "Été 2024",
+                Arrays.asList("Sortie parfaite en famille", "Gratuit pour les Montpelliérains !"),
+                "Bus ligne 13 - Arrêt Zoo",
                 marie,
-                Arrays.asList("shopping", "luxe", "champs-élysées", "nuit"),
-                "shop", 301, false, true, "2024-12-20T19:00:00Z"
+                Arrays.asList("zoo", "nature", "lunaret", "animaux"),
+                "nature", 301, false, true, "2024-06-20T11:00:00Z"
         ));
 
         photos.add(new Photo(
                 "photo_6",
-                "https://images.unsplash.com/photo-1762698860407-13383c010b13?w=800",
-                "Sacré-Cœur depuis Montmartre",
-                "Vue panoramique sur Paris depuis les marches du Sacré-Cœur",
-                new PhotoLocation("Sacré-Cœur, Montmartre", 48.8867, 2.3431, false),
+                "https://images.unsplash.com/photo-1627918803730-8025e1730d1d?w=800",
+                "Arc de Triomphe du Peyrou",
+                "La majestueuse porte d'entrée de la ville ancienne.",
+                new PhotoLocation("Arc de Triomphe, Montpellier", 43.6110, 3.8715, false),
                 "2024-08-15", "Été 2024",
-                Arrays.asList("Vue à 360° sur Paris", "Montée sportive mais ça vaut le coup"),
-                "Métro ligne 12 - Station Abbesses, puis funiculaire",
+                Arrays.asList("Un monument historique magnifique", "La vue depuis le sommet est dingue"),
+                "Tram ligne 4 - Arrêt Peyrou",
                 julien,
-                Arrays.asList("sacré-coeur", "montmartre", "panorama", "église"),
+                Arrays.asList("peyrou", "montpellier", "histoire", "monument"),
                 "monument", 521, true, true, "2024-08-15T17:00:00Z"
         ));
 
         photos.add(new Photo(
                 "photo_7",
-                "https://images.unsplash.com/photo-1721596461283-0adb7e00fc60?w=800",
-                "Rue pavée de Montmartre",
-                "Rue typique de Montmartre avec ses pavés et ses façades colorées",
-                new PhotoLocation("Montmartre, Paris", 48.8867, 2.3400, true),
+                "https://images.unsplash.com/photo-1549413289-53e7784f1f50?w=800",
+                "Faculté de Médecine",
+                "La plus ancienne école de médecine du monde occidental encore en activité.",
+                new PhotoLocation("Faculté de Médecine, Montpellier", 43.6128, 3.8732, false),
                 "2024-09-10", "Automne 2024",
-                Arrays.asList("Charme parisien authentique", "Parfait pour une balade"),
-                "Métro ligne 12 - Station Abbesses",
+                Arrays.asList("Quelle architecture !", "Un lieu chargé d'histoire"),
+                "À côté de la Cathédrale St-Pierre",
                 emma,
-                Arrays.asList("montmartre", "rue", "authenticité", "charme"),
-                "street", 278, false, true, "2024-09-10T10:30:00Z"
+                Arrays.asList("medecine", "histoire", "patrimoine"),
+                "monument", 278, false, true, "2024-09-10T10:30:00Z"
         ));
 
         photos.add(new Photo(
                 "photo_8",
-                "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800",
-                "Notre-Dame avant restauration",
-                "Photo de Notre-Dame de Paris avant l'incendie, vue depuis la Seine",
-                new PhotoLocation("Notre-Dame de Paris", 48.8530, 2.3499, false),
-                "2019-03-15", "Printemps 2019",
-                Arrays.asList("Souvenir précieux", "Hâte de la voir restaurée"),
-                "Métro ligne 4 - Station Cité",
+                "https://images.unsplash.com/photo-1563905317-d736775aa713?w=800",
+                "Rives du Lez",
+                "Le nouveau Montpellier avec l'Arbre Blanc en arrière-plan.",
+                new PhotoLocation("Rives du Lez, Montpellier", 43.6030, 3.8965, false),
+                "2024-03-15", "Printemps 2024",
+                Arrays.asList("Génial pour courir", "L'architecture de l'Arbre Blanc est folle"),
+                "Tram ligne 1 ou 3 - Arrêt Port Marianne",
                 thomas,
-                Arrays.asList("notre-dame", "histoire", "architecture", "seine"),
-                "monument", 892, true, true, "2019-03-15T15:00:00Z"
+                Arrays.asList("lez", "architecture", "moderne", "rivière"),
+                "nature", 892, true, true, "2024-03-15T15:00:00Z"
         ));
 
+        // Photos liées à des groupes
+        photos.add(new Photo(
+                "photo_g1",
+                "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+                "Rando dans les Alpes",
+                "Une superbe journée de marche au grand air.",
+                new PhotoLocation("Chamonix", 45.9237, 6.8694, false),
+                "2024-07-20", "Été 2024",
+                new ArrayList<>(), "Se garer au parking des Bossons", emma,
+                Arrays.asList("rando", "montagne", "nature"), "nature", 45, false, false, "2024-07-20T10:00:00Z", "g1"
+        ));
+
+        photos.add(new Photo(
+                "photo_g2",
+                "https://images.unsplash.com/photo-1508833319223-f8004d4ba3b6?w=800",
+                "Paris By Night",
+                "Essai de pose longue sur les quais.",
+                new PhotoLocation("Pont Neuf, Paris", 48.8580, 2.3414, false),
+                "2024-08-05", "Été 2024",
+                Arrays.asList("Beau travail sur la lumière"), "Prendre le métro Pont Neuf", thomas,
+                Arrays.asList("paris", "nuit", "photo"), "street", 112, false, false, "2024-08-05T22:00:00Z", "g2"
+        ));
+
+        cachedPhotos = photos;
         return photos;
     }
 
-    public static List<Photo> filterPhotos(List<Photo> photos,
-                                                 String query,
-                                                 String locationType,
-                                                 boolean random) {
-        List<Photo> result = new ArrayList<>(photos);
+    public static void addPhoto(Photo photo) {
+        if (cachedPhotos == null) {
+            getAllPhotos();
+        }
+        cachedPhotos.add(0, photo); // Ajouter au début
+    }
 
+    public static List<Photo> filterPhotos(List<Photo> photos,
+                                           String query,
+                                           String locationType,
+                                           String groupId,
+                                           boolean random) {
+        List<Photo> result = new ArrayList<>();
+
+        for (Photo p : photos) {
+            boolean matches = true;
+
+            // Filtre par groupe
+            if (groupId != null && !groupId.equals("all")) {
+                if (p.getGroupId() == null || !p.getGroupId().equals(groupId)) {
+                    matches = false;
+                }
+            } else if (p.getGroupId() != null) {
+                // Par défaut (si groupId == all), on ne montre que les photos publiques (pas de groupe)
+                matches = false;
+            }
+
+            if (matches) result.add(p);
+        }
+
+        // Appliquer les autres filtres sur le résultat partiel
         if (query != null && !query.isEmpty()) {
             String q = query.toLowerCase();
             List<Photo> filtered = new ArrayList<>();

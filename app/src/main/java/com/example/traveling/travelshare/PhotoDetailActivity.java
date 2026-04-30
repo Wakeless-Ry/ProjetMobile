@@ -3,49 +3,63 @@ package com.example.traveling.travelshare;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.traveling.R;
+import com.example.traveling.travelshare.adapter.PhotoAdapter;
+import com.example.traveling.travelshare.data.FirestoreManager;
+import com.example.traveling.travelshare.model.Photo;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
-import com.example.traveling.travelshare.data.SampleData;
-import com.example.traveling.travelshare.model.Photo;
-import com.example.traveling.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PhotoDetailActivity extends AppCompatActivity {
 
     private Photo photo;
+    private FirestoreManager firestoreManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_photo_detail);
+        setContentView(R.layout.ts_activity_photo_detail);
 
-        // Récupère le photo via son id
+        firestoreManager = new FirestoreManager();
+
+        // Récupère le photo via son id depuis Firestore
         String photoId = getIntent().getStringExtra("photoId");
-        List<Photo> allPhotos = SampleData.getAllPhotos();
-        for (Photo p : allPhotos) {
-            if (p.getId().equals(photoId)) {
-                photo = p;
-                break;
-            }
-        }
-
-        if (photo == null) {
-            Toast.makeText(this, "Photo introuvable", Toast.LENGTH_SHORT).show();
+        if (photoId == null) {
             finish();
             return;
         }
 
-        bindViews();
+        firestoreManager.getPhoto(photoId, new FirestoreManager.OnDataLoadedListener<Photo>() {
+            @Override
+            public void onSuccess(Photo loadedPhoto) {
+                photo = loadedPhoto;
+                bindViews();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(PhotoDetailActivity.this, "Photo introuvable", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
     }
 
     private void bindViews() {
@@ -63,14 +77,20 @@ public class PhotoDetailActivity extends AppCompatActivity {
         Button btnLike = findViewById(R.id.btn_like);
         updateLikeButton(btnLike);
         btnLike.setOnClickListener(v -> {
-            if (photo.isLiked()) {
-                photo.setLikes(photo.getLikes() - 1);
-                photo.setLiked(false);
-            } else {
-                photo.setLikes(photo.getLikes() + 1);
-                photo.setLiked(true);
-            }
+            boolean wasLiked = photo.isLiked();
+            photo.setLiked(!wasLiked);
+            photo.setLikes(photo.getLikes() + (wasLiked ? -1 : 1));
             updateLikeButton(btnLike);
+            
+            firestoreManager.likePhoto(photo.getId(), !wasLiked, new FirestoreManager.OnDataLoadedListener<Void>() {
+                @Override public void onSuccess(Void data) {}
+                @Override public void onError(Exception e) {
+                    // Revert if error
+                    photo.setLiked(wasLiked);
+                    photo.setLikes(photo.getLikes() + (wasLiked ? 1 : -1));
+                    updateLikeButton(btnLike);
+                }
+            });
         });
 
 
@@ -86,11 +106,21 @@ public class PhotoDetailActivity extends AppCompatActivity {
         findViewById(R.id.btn_report).setOnClickListener(v ->
                 Toast.makeText(this, "Photo signalée. Merci pour votre vigilance.", Toast.LENGTH_SHORT).show());
 
-        String initial = photo.getAuthor().getName().substring(0, 1).toUpperCase();
+        String name = photo.getAuthor().getName();
+        String initial = (name != null && !name.isEmpty()) ? name.substring(0, 1).toUpperCase() : "?";
         ((TextView) findViewById(R.id.tv_author_initial)).setText(initial);
-        ((TextView) findViewById(R.id.tv_author_name)).setText(photo.getAuthor().getName());
+        TextView tvAuthorName = findViewById(R.id.tv_author_name);
+        tvAuthorName.setText(name);
         ((TextView) findViewById(R.id.tv_created_at)).setText(
                 "Publié le " + formatDate(photo.getCreatedAt()));
+
+        View.OnClickListener openProfile = v -> {
+            Intent intent = new Intent(this, AuthorProfileActivity.class);
+            intent.putExtra("authorId", photo.getAuthor().getId());
+            startActivity(intent);
+        };
+        tvAuthorName.setOnClickListener(openProfile);
+        findViewById(R.id.tv_author_initial).setOnClickListener(openProfile);
 
         ((TextView) findViewById(R.id.tv_location_name)).setText(photo.getLocation().getName());
         ((TextView) findViewById(R.id.tv_location_type)).setText(
@@ -113,19 +143,101 @@ public class PhotoDetailActivity extends AppCompatActivity {
         }
 
         ChipGroup chipGroup = findViewById(R.id.chip_group_tags);
-        for (String tag : photo.getTags()) {
-            Chip chip = new Chip(this);
-            chip.setText("#" + tag);
-            chip.setClickable(false);
-            chipGroup.addView(chip);
+        chipGroup.removeAllViews();
+        if (photo.getTags() != null) {
+            for (String tag : photo.getTags()) {
+                Chip chip = new Chip(this);
+                chip.setText("#" + tag);
+                chip.setClickable(false);
+                chipGroup.addView(chip);
+            }
         }
 
         LinearLayout commentsContainer = findViewById(R.id.comments_container);
+        commentsContainer.removeAllViews();
         ((TextView) findViewById(R.id.tv_comments_count))
-                .setText("Commentaires (" + photo.getComments().size() + ")");
+                .setText("Commentaires (" + (photo.getComments() != null ? photo.getComments().size() : 0) + ")");
 
-        for (String comment : photo.getComments()) {
-            addCommentView(commentsContainer, comment);
+        if (photo.getComments() != null) {
+            for (String comment : photo.getComments()) {
+                addCommentView(commentsContainer, comment);
+            }
+        }
+
+        setupSimilarPhotos();
+        setupCommentSection();
+    }
+
+    private void setupSimilarPhotos() {
+        RecyclerView recyclerSimilar = findViewById(R.id.recycler_similar_photos);
+        firestoreManager.getPhotos("all", photo.getLocationType(), new FirestoreManager.OnDataLoadedListener<List<Photo>>() {
+            @Override
+            public void onSuccess(List<Photo> photos) {
+                List<Photo> similar = new ArrayList<>();
+                for (Photo p : photos) {
+                    if (!p.getId().equals(photo.getId())) {
+                        similar.add(p);
+                        if (similar.size() >= 5) break;
+                    }
+                }
+
+                if (similar.isEmpty()) {
+                    recyclerSimilar.setVisibility(View.GONE);
+                    return;
+                }
+
+                PhotoAdapter adapter = new PhotoAdapter(PhotoDetailActivity.this, similar, p -> {
+                    Intent intent = new Intent(PhotoDetailActivity.this, PhotoDetailActivity.class);
+                    intent.putExtra("photoId", p.getId());
+                    startActivity(intent);
+                    finish();
+                });
+
+                recyclerSimilar.setLayoutManager(new LinearLayoutManager(PhotoDetailActivity.this, LinearLayoutManager.HORIZONTAL, false));
+                recyclerSimilar.setAdapter(adapter);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                recyclerSimilar.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void setupCommentSection() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        boolean loggedIn = user != null;
+
+        View layoutAddComment = findViewById(R.id.layout_add_comment);
+        View tvLoginToComment = findViewById(R.id.tv_login_to_comment);
+        EditText etComment = findViewById(R.id.et_comment);
+        View btnSend = findViewById(R.id.btn_send_comment);
+
+        if (loggedIn) {
+            layoutAddComment.setVisibility(View.VISIBLE);
+            tvLoginToComment.setVisibility(View.GONE);
+
+            btnSend.setOnClickListener(v -> {
+                String text = etComment.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    if (photo.getComments() == null) photo.setComments(new ArrayList<>());
+                    photo.getComments().add(text);
+                    addCommentView(findViewById(R.id.comments_container), text);
+                    etComment.setText("");
+                    ((TextView) findViewById(R.id.tv_comments_count))
+                            .setText("Commentaires (" + photo.getComments().size() + ")");
+                    
+                    firestoreManager.addComment(photo.getId(), text, new FirestoreManager.OnDataLoadedListener<Void>() {
+                        @Override public void onSuccess(Void data) {}
+                        @Override public void onError(Exception e) {
+                            Toast.makeText(PhotoDetailActivity.this, "Erreur lors de l'envoi du commentaire", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+        } else {
+            layoutAddComment.setVisibility(View.GONE);
+            tvLoginToComment.setVisibility(View.VISIBLE);
         }
     }
 
@@ -134,7 +246,6 @@ public class PhotoDetailActivity extends AppCompatActivity {
     }
 
     private void addCommentView(LinearLayout container, String comment) {
-        // Inflate dynamiquement une ligne de commentaire
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(0, 8, 0, 8);
@@ -163,15 +274,16 @@ public class PhotoDetailActivity extends AppCompatActivity {
         if (mapIntent.resolveActivity(getPackageManager()) != null) {
             startActivity(mapIntent);
         } else {
-            // Fallback navigateur
             Uri webUri = Uri.parse("https://maps.google.com/?q=" + lat + "," + lng);
             startActivity(new Intent(Intent.ACTION_VIEW, webUri));
         }
     }
 
     private String formatDate(String isoDate) {
+        if (isoDate == null) return "Récemment";
         try {
-            String[] parts = isoDate.split("T")[0].split("-");
+            String datePart = isoDate.contains("T") ? isoDate.split("T")[0] : isoDate;
+            String[] parts = datePart.split("-");
             String[] months = {"jan", "fév", "mar", "avr", "mai", "juin",
                     "juil", "août", "sep", "oct", "nov", "déc"};
             int month = Integer.parseInt(parts[1]) - 1;

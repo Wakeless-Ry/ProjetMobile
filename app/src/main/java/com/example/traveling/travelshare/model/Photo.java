@@ -1,5 +1,6 @@
 package com.example.traveling.travelshare.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Photo {
@@ -19,12 +20,22 @@ public class Photo {
     private boolean isLiked;
     private boolean isPublic;
     private String createdAt;
+    private String groupId; // Optionnel : ID du groupe si la photo appartient à un groupe
 
     public Photo(String id, String imageUrl, String title, String description,
                        PhotoLocation location, String date, String period,
                        List<String> comments, String directions, Author author,
                        List<String> tags, String locationType, int likes,
                        boolean isLiked, boolean isPublic, String createdAt) {
+        this(id, imageUrl, title, description, location, date, period, comments, 
+             directions, author, tags, locationType, likes, isLiked, isPublic, createdAt, null);
+    }
+
+    public Photo(String id, String imageUrl, String title, String description,
+                 PhotoLocation location, String date, String period,
+                 List<String> comments, String directions, Author author,
+                 List<String> tags, String locationType, int likes,
+                 boolean isLiked, boolean isPublic, String createdAt, String groupId) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.title = title;
@@ -32,7 +43,7 @@ public class Photo {
         this.location = location;
         this.date = date;
         this.period = period;
-        this.comments = comments;
+        this.comments = new ArrayList<>(comments);
         this.directions = directions;
         this.author = author;
         this.tags = tags;
@@ -41,6 +52,7 @@ public class Photo {
         this.isLiked = isLiked;
         this.isPublic = isPublic;
         this.createdAt = createdAt;
+        this.groupId = groupId;
     }
 
     // Getters & Setters
@@ -60,7 +72,10 @@ public class Photo {
     public boolean isLiked() { return isLiked; }
     public boolean isPublic() { return isPublic; }
     public String getCreatedAt() { return createdAt; }
+    public String getGroupId() { return groupId; }
 
     public void setLikes(int likes) { this.likes = likes; }
     public void setLiked(boolean liked) { isLiked = liked; }
+    public void setGroupId(String groupId) { this.groupId = groupId; }
+    public void setComments(List<String> comments) { this.comments = comments; }
 }

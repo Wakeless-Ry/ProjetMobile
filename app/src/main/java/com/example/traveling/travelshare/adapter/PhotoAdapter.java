@@ -1,6 +1,7 @@
 package com.example.traveling.travelshare.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.example.traveling.R;
+import com.example.traveling.travelshare.AuthorProfileActivity;
 import com.example.traveling.travelshare.model.Photo;
 
 import java.util.List;
@@ -40,10 +42,14 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoViewHol
         notifyDataSetChanged();
     }
 
+    public List<Photo> getPhotos() {
+        return photos;
+    }
+
     @NonNull
     @Override
     public PhotoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_photo, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.ts_item_photo, parent, false);
         return new PhotoViewHolder(view);
     }
 
@@ -67,6 +73,14 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoViewHol
         String initial = photo.getAuthor().getName().substring(0, 1).toUpperCase();
         holder.tvAuthorInitial.setText(initial);
         holder.tvAuthorName.setText(photo.getAuthor().getName());
+
+        View.OnClickListener authorClick = v -> {
+            Intent intent = new Intent(context, AuthorProfileActivity.class);
+            intent.putExtra("authorId", photo.getAuthor().getId());
+            context.startActivity(intent);
+        };
+        holder.tvAuthorName.setOnClickListener(authorClick);
+        holder.tvAuthorInitial.setOnClickListener(authorClick);
 
         // Tags (max 3)
         holder.chipGroupTags.removeAllViews();

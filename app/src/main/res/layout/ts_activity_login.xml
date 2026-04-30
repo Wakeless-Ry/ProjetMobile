@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_gradient">
+    android:background="@color/bg_gradient"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -68,6 +69,7 @@
 
                 <!-- Login fields -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_login_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Email"
@@ -81,6 +83,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_login_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Mot de passe"
@@ -96,6 +99,7 @@
 
                 <!-- Signup fields (cachés par défaut) -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_signup_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Nom complet"
@@ -110,6 +114,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_signup_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Email"
@@ -124,6 +129,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_signup_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Mot de passe"
@@ -146,6 +152,15 @@
                     android:text="Se connecter"
                     android:backgroundTint="@color/purple_600"
                     android:padding="14dp"/>
+
+                <Button
+                    android:id="@+id/btn_demo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🚀 Mode Démo (Alice)"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:textColor="@color/purple_600"
+                    android:layout_marginTop="8dp"/>
 
                 <TextView
                     android:id="@+id/tv_switch_mode"
