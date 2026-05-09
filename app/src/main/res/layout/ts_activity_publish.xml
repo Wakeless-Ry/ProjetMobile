@@ -12,6 +12,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- ── Header ─────────────────────────────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,6 +36,7 @@
                 android:layout_marginStart="16dp"/>
         </LinearLayout>
 
+        <!-- ── Image picker ───────────────────────────────────────────── -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_image"
             android:layout_width="match_parent"
@@ -65,6 +67,7 @@
             </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- ── Title ──────────────────────────────────────────────────── -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -77,6 +80,7 @@
                 android:layout_height="wrap_content"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- ── Description ────────────────────────────────────────────── -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -97,42 +101,219 @@
             android:layout_height="wrap_content"
             android:text="🎙️ Dicter la description"
             style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="16dp"/>
 
+        <!-- ── Place section header ───────────────────────────────────── -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📍 Localisation"
+            android:text="📍 Lieu"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"/>
 
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- ── Mode toggle (RadioGroup) ───────────────────────────────── -->
+        <RadioGroup
+            android:id="@+id/rg_place_mode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nom du lieu (ex: Tour Eiffel)"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:orientation="horizontal"
             android:layout_marginBottom="12dp">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_location_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-        </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🏷️ Catégorie"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
+            <RadioButton
+                android:id="@+id/rb_existing_place"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Lieu existant"
+                android:checked="true"/>
 
-        <Spinner
-            android:id="@+id/spinner_category"
+            <RadioButton
+                android:id="@+id/rb_new_place"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nouveau lieu"/>
+        </RadioGroup>
+
+        <!-- ── Panel: existing place ──────────────────────────────────── -->
+        <LinearLayout
+            android:id="@+id/panel_existing_place"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:padding="12dp"
-            android:background="@drawable/spinner_background"/>
+            android:orientation="vertical"
+            android:visibility="visible">
 
+            <Spinner
+                android:id="@+id/spinner_place"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@drawable/spinner_background"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Details card shown below the spinner -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
+
+                <TextView
+                    android:id="@+id/tv_place_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:textSize="13sp"
+                    android:lineSpacingMultiplier="1.4"
+                    android:text=""/>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <!-- ── Panel: new place ───────────────────────────────────────── -->
+        <LinearLayout
+            android:id="@+id/panel_new_place"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Location name -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nom du lieu"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="12dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_location_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Lat / Lng row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Latitude"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_marginEnd="6dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_latitude"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal|numberSigned"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Longitude"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_marginStart="6dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_longitude"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal|numberSigned"/>
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- Time spent / Price row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Durée (heures)"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_marginEnd="6dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_time_spent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Prix (€)"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_marginStart="6dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_price"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal"/>
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- Category spinner -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏷️ Catégorie"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <Spinner
+                android:id="@+id/spinner_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:padding="12dp"
+                android:background="@drawable/spinner_background"/>
+
+            <!-- Opening hours -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🕐 Horaires d'ouverture"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <CheckBox
+                android:id="@+id/cb_always_open"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Toujours ouvert (0h–24h)"
+                android:checked="false"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Slot rows are added here programmatically -->
+            <LinearLayout
+                android:id="@+id/ll_horaire_slots"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="4dp"/>
+
+            <Button
+                android:id="@+id/btn_add_horaire"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋ Ajouter un créneau"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_marginBottom="16dp"/>
+        </LinearLayout>
+
+        <!-- ── Visibility toggle ──────────────────────────────────────── -->
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switch_public"
             android:layout_width="match_parent"
@@ -141,6 +322,7 @@
             android:checked="true"
             android:layout_marginBottom="8dp"/>
 
+        <!-- ── Group spinner ──────────────────────────────────────────── -->
         <TextView
             android:id="@+id/tv_group_label"
             android:layout_width="wrap_content"
@@ -159,6 +341,7 @@
             android:background="@drawable/spinner_background"
             android:visibility="gone"/>
 
+        <!-- ── Publish button ─────────────────────────────────────────── -->
         <Button
             android:id="@+id/btn_publish"
             android:layout_width="match_parent"
