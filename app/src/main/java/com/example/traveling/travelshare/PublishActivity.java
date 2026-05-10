@@ -1,7 +1,10 @@
 package com.example.traveling.travelshare;
 
+import android.content.ActivityNotFoundException;
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -45,8 +48,8 @@ import java.util.UUID;
 public class PublishActivity extends AppCompatActivity {
 
     private static final String TAG = "PublishActivity";
+    private static final int VOICE_REQUEST_CODE = 1002;
 
-    // Common fields
     private EditText etTitle, etDescription;
     private Spinner spinnerGroup;
     private ImageView ivPreview;
@@ -58,20 +61,16 @@ public class PublishActivity extends AppCompatActivity {
     private RadioGroup rgPlaceMode;
     private RadioButton rbExistingPlace, rbNewPlace;
 
-    // Existing place panel
     private LinearLayout panelExistingPlace;
     private Spinner spinnerPlace;
     private TextView tvPlaceDetails;
     private List<Place> allPlaces = new ArrayList<>();
     private Place selectedPlace = null;
 
-    // New place panel
     private LinearLayout panelNewPlace;
     private EditText etLocationName, etLatitude, etLongitude, etTimeSpent, etPrice;
     private Spinner spinnerCategory;
 
-    // Horaires (opening hours) for new place
-    /** Each slot holds { debut: double, fin: double } in the same format as Place / Firestore. */
     private final List<double[]> horaireSlots = new ArrayList<>(); // [0]=debut, [1]=fin
     private LinearLayout llHoraireSlots;
     private CheckBox cbAlwaysOpen;
@@ -101,10 +100,7 @@ public class PublishActivity extends AppCompatActivity {
 
         View btnVoice = findViewById(R.id.btn_voice_desc);
         if (btnVoice != null) {
-            btnVoice.setOnClickListener(v -> {
-                Toast.makeText(this, "Simulation: Écoute en cours...", Toast.LENGTH_SHORT).show();
-                etDescription.setText("C'était un moment inoubliable passé ici.");
-            });
+            btnVoice.setOnClickListener(v -> startVoiceRecognition());
         }
 
         findViewById(R.id.card_image).setOnClickListener(v -> {
@@ -120,17 +116,14 @@ public class PublishActivity extends AppCompatActivity {
         ivPreview     = findViewById(R.id.iv_preview);
         btnPublish    = findViewById(R.id.btn_publish);
 
-        // Place mode
         rgPlaceMode      = findViewById(R.id.rg_place_mode);
         rbExistingPlace  = findViewById(R.id.rb_existing_place);
         rbNewPlace       = findViewById(R.id.rb_new_place);
 
-        // Existing place panel
         panelExistingPlace = findViewById(R.id.panel_existing_place);
         spinnerPlace       = findViewById(R.id.spinner_place);
         tvPlaceDetails     = findViewById(R.id.tv_place_details);
 
-        // New place panel
         panelNewPlace   = findViewById(R.id.panel_new_place);
         etLocationName  = findViewById(R.id.et_location_name);
         etLatitude      = findViewById(R.id.et_latitude);
@@ -142,7 +135,6 @@ public class PublishActivity extends AppCompatActivity {
         cbAlwaysOpen    = findViewById(R.id.cb_always_open);
     }
 
-    // ── Horaires (opening hours) ─────────────────────────────────────────────
 
     private void setupHoraires() {
         // "Toujours ouvert" checkbox hides / shows the slot list
@@ -151,24 +143,17 @@ public class PublishActivity extends AppCompatActivity {
             findViewById(R.id.btn_add_horaire).setVisibility(checked ? View.GONE : View.VISIBLE);
         });
 
-        // "+" button adds a new slot
         findViewById(R.id.btn_add_horaire).setOnClickListener(v -> addHoraireSlot(9.0, 18.0));
 
-        // Start with one default slot
         addHoraireSlot(9.0, 18.0);
     }
 
-    /**
-     * Dynamically inflates a row for one opening-hours slot and appends it to
-     * {@code llHoraireSlots}. The row contains two tappable EditTexts (debut / fin)
-     * and a "✕" remove button — identical in spirit to TravelPathActivity's time pickers.
-     */
+
     private void addHoraireSlot(double debut, double fin) {
         double[] slot = {debut, fin};
         horaireSlots.add(slot);
         int index = horaireSlots.size() - 1;
 
-        // Outer row
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
@@ -177,7 +162,6 @@ public class PublishActivity extends AppCompatActivity {
         rowParams.setMargins(0, 0, 0, dpToPx(8));
         row.setLayoutParams(rowParams);
 
-        // Début field
         EditText etDebut = new EditText(this);
         etDebut.setHint("Ouverture");
         etDebut.setText(formatHoraire(debut));
@@ -189,7 +173,6 @@ public class PublishActivity extends AppCompatActivity {
         etParams.setMarginEnd(dpToPx(6));
         etDebut.setLayoutParams(etParams);
 
-        // Fin field
         EditText etFin = new EditText(this);
         etFin.setHint("Fermeture");
         etFin.setText(formatHoraire(fin));
@@ -201,7 +184,6 @@ public class PublishActivity extends AppCompatActivity {
         etFinParams.setMarginEnd(dpToPx(6));
         etFin.setLayoutParams(etFinParams);
 
-        // Remove button
         Button btnRemove = new Button(this);
         btnRemove.setText("✕");
         btnRemove.setLayoutParams(new LinearLayout.LayoutParams(
@@ -213,7 +195,6 @@ public class PublishActivity extends AppCompatActivity {
         row.addView(btnRemove);
         llHoraireSlots.addView(row);
 
-        // Time pickers — same pattern as TravelPathActivity
         View.OnClickListener pickDebut = v -> {
             int h = (int) Math.floor(slot[0]);
             int m = (int) ((slot[0] - h) * 60);
@@ -236,7 +217,6 @@ public class PublishActivity extends AppCompatActivity {
         etFin.setOnClickListener(pickFin);
         etFin.setOnFocusChangeListener((v, has) -> { if (has) pickFin.onClick(v); });
 
-        // Remove row + slot entry
         btnRemove.setOnClickListener(v -> {
             int i = horaireSlots.indexOf(slot);
             if (i >= 0) horaireSlots.remove(i);
@@ -244,16 +224,12 @@ public class PublishActivity extends AppCompatActivity {
         });
     }
 
-    /** Converts a fractional double hour (e.g. 10.5) to "10:30". */
     private String formatHoraire(double h) {
         return String.format(Locale.getDefault(), "%02.0f:%02.0f",
                 Math.floor(h), (h - Math.floor(h)) * 60);
     }
 
-    /**
-     * Builds the horaires list that Firestore / Place expects.
-     * Returns a single always-open slot if the checkbox is ticked.
-     */
+
     private List<Map<String, Double>> collectHoraires() {
         if (cbAlwaysOpen.isChecked()) {
             Map<String, Double> open = new HashMap<>();
@@ -275,7 +251,6 @@ public class PublishActivity extends AppCompatActivity {
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
-    // ── Place mode toggle ────────────────────────────────────────────────────
 
     private void setupPlaceModeToggle() {
         rgPlaceMode.setOnCheckedChangeListener((group, checkedId) -> {
@@ -287,13 +262,11 @@ public class PublishActivity extends AppCompatActivity {
                 panelNewPlace.setVisibility(View.VISIBLE);
             }
         });
-        // Default: existing place
         rbExistingPlace.setChecked(true);
         panelExistingPlace.setVisibility(View.VISIBLE);
         panelNewPlace.setVisibility(View.GONE);
     }
 
-    // ── Load existing places from Firestore ──────────────────────────────────
 
     private void loadPlacesFromFirestore() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -314,7 +287,6 @@ public class PublishActivity extends AppCompatActivity {
 
     private void populatePlaceSpinner() {
         if (allPlaces.isEmpty()) {
-            // No existing places – switch automatically to "new place" mode
             rbNewPlace.setChecked(true);
             rbExistingPlace.setEnabled(false);
             rbExistingPlace.setText("Lieu existant (aucun disponible)");
@@ -342,7 +314,6 @@ public class PublishActivity extends AppCompatActivity {
             }
         });
 
-        // Pre-select first item
         if (!allPlaces.isEmpty()) {
             selectedPlace = allPlaces.get(0);
             updatePlaceDetailsView(selectedPlace);
@@ -359,7 +330,6 @@ public class PublishActivity extends AppCompatActivity {
         tvPlaceDetails.setText(details);
     }
 
-    // ── Category spinner (for new place) ────────────────────────────────────
 
     private void setupCategorySpinner() {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -368,7 +338,6 @@ public class PublishActivity extends AppCompatActivity {
         spinnerCategory.setAdapter(adapter);
     }
 
-    // ── Group spinner ────────────────────────────────────────────────────────
 
     private void setupGroupSpinner() {
         Log.d(TAG, "Loading groups for spinner");
@@ -419,7 +388,6 @@ public class PublishActivity extends AppCompatActivity {
         });
     }
 
-    // ── Publish ──────────────────────────────────────────────────────────────
 
     private void handlePublish() {
         String title = etTitle.getText().toString().trim();
@@ -439,14 +407,12 @@ public class PublishActivity extends AppCompatActivity {
         boolean useExisting = rbExistingPlace.isChecked();
 
         if (useExisting) {
-            // Use the already-selected place directly
             if (selectedPlace == null) {
                 Toast.makeText(this, "Veuillez sélectionner un lieu", Toast.LENGTH_SHORT).show();
                 return;
             }
             buildAndPublishPhoto(user, selectedPlace, deriveCategoryFromTags(selectedPlace));
         } else {
-            // Validate new-place fields
             String locName = etLocationName.getText().toString().trim();
             String latStr  = etLatitude.getText().toString().trim();
             String lngStr  = etLongitude.getText().toString().trim();
@@ -468,15 +434,12 @@ public class PublishActivity extends AppCompatActivity {
             int catPos = spinnerCategory.getSelectedItemPosition() < 0 ? 0 : spinnerCategory.getSelectedItemPosition();
             String catValue = CATEGORY_VALUES[catPos];
 
-            // Save new place to Firestore, then publish photo
             btnPublish.setEnabled(false);
             saveNewPlaceAndPublish(user, locName, lat, lng, catValue);
         }
     }
 
-    /**
-     * Persists a new Place document in Firestore, then continues to publish the photo.
-     */
+
     private void saveNewPlaceAndPublish(FirebaseUser user, String locName, double lat, double lng, String category) {
         double timeSpent = 1.0;
         double price     = 0.0;
@@ -496,7 +459,6 @@ public class PublishActivity extends AppCompatActivity {
             return;
         }
 
-        // Validate each slot
         for (Map<String, Double> slot : horaires) {
             if (slot.get("debut") >= slot.get("fin")) {
                 Toast.makeText(this, "L'heure d'ouverture doit être antérieure à la fermeture", Toast.LENGTH_SHORT).show();
@@ -505,7 +467,6 @@ public class PublishActivity extends AppCompatActivity {
             }
         }
 
-        // Build a Place-like map that mirrors Place.class deserialization schema
         Map<String, Object> placeData = new HashMap<>();
         placeData.put("name", locName);
         placeData.put("latitude", lat);
@@ -605,7 +566,6 @@ public class PublishActivity extends AppCompatActivity {
         }
     }
 
-    /** Best-effort: pick the first tag that matches a known category, else "other". */
     private String deriveCategoryFromTags(Place place) {
         if (place.getTags() != null) {
             for (String tag : place.getTags()) {
@@ -615,5 +575,34 @@ public class PublishActivity extends AppCompatActivity {
             }
         }
         return "other";
+    }
+
+    private void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Décrivez votre photo...");
+        try {
+            startActivityForResult(intent, VOICE_REQUEST_CODE);
+        } catch (ActivityNotFoundException a) {
+            Toast.makeText(this, "La reconnaissance vocale n'est pas supportée sur votre appareil", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == VOICE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (result != null && !result.isEmpty()) {
+                String existingText = etDescription.getText().toString().trim();
+                String newText = result.get(0);
+                if (existingText.isEmpty()) {
+                    etDescription.setText(newText);
+                } else {
+                    etDescription.setText(existingText + " " + newText);
+                }
+            }
+        }
     }
 }

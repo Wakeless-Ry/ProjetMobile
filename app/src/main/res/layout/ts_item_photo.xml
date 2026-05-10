@@ -13,7 +13,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Image + overlay -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="160dp">
@@ -24,14 +23,12 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"/>
 
-            <!-- Gradient overlay bas -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="80dp"
                 android:layout_gravity="bottom"
                 android:background="@drawable/ts_gradient_overlay"/>
 
-            <!-- Titre & description sur l'image -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -61,7 +58,6 @@
                     android:ellipsize="end"/>
             </LinearLayout>
 
-            <!-- Badge likes -->
             <TextView
                 android:id="@+id/tv_likes"
                 android:layout_width="wrap_content"
@@ -76,14 +72,12 @@
                 android:paddingVertical="2dp"/>
         </FrameLayout>
 
-        <!-- Infos bas de la carte -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="8dp">
 
-            <!-- Auteur -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -129,7 +123,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Tags -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chip_group_tags"
                 android:layout_width="match_parent"

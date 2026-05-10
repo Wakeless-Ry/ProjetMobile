@@ -50,7 +50,6 @@ public class AuthorProfileActivity extends AppCompatActivity {
     }
 
     private void loadAuthorAndPhotos() {
-        // Charger les infos de l'auteur depuis Firestore
         firestoreManager.getUser(authorId, new FirestoreManager.OnDataLoadedListener<Author>() {
             @Override
             public void onSuccess(Author loadedAuthor) {
@@ -60,7 +59,6 @@ public class AuthorProfileActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                // Si l'utilisateur n'existe pas encore dans ts_users, on chargera l'auteur via sa première photo
                 loadPhotos();
             }
         });
@@ -70,7 +68,6 @@ public class AuthorProfileActivity extends AppCompatActivity {
         firestoreManager.getPhotosByAuthor(authorId, new FirestoreManager.OnDataLoadedListener<List<Photo>>() {
             @Override
             public void onSuccess(List<Photo> photos) {
-                // Fallback : si on n'a pas pu charger l'auteur via getUser, on le prend de la première photo
                 if (author == null && !photos.isEmpty()) {
                     author = photos.get(0).getAuthor();
                 }
@@ -78,7 +75,6 @@ public class AuthorProfileActivity extends AppCompatActivity {
                 if (author != null) {
                     bindViews(photos);
                 } else {
-                    // Si toujours null, on crée un auteur par défaut ou on affiche une erreur
                     FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                     if (authorId.equals(currentUser.getUid())) {
                         author = new Author(authorId, currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Moi", 

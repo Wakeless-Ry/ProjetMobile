@@ -31,7 +31,6 @@ public class FirestoreManager {
         this.db = FirebaseFirestore.getInstance();
     }
 
-    // --- PHOTOS ---
 
     public void getPhotos(String groupId, String locationType, OnDataLoadedListener<List<Photo>> listener) {
         Log.d(TAG, "getPhotos called with groupId: " + groupId + ", locationType: " + locationType);
@@ -64,7 +63,6 @@ public class FirestoreManager {
                 }
                 
                 try {
-                    // Tri manuel par date décroissante pour éviter les erreurs d'index composite
                     photos.sort((p1, p2) -> {
                         String c1 = p1.getCreatedAt();
                         String c2 = p2.getCreatedAt();
@@ -229,7 +227,6 @@ public class FirestoreManager {
         }
     }
 
-    // --- GROUPS ---
 
     public void getAllGroups(OnDataLoadedListener<List<Group>> listener) {
         db.collection(COLLECTION_GROUPS).get().addOnCompleteListener(task -> {
@@ -283,7 +280,6 @@ public class FirestoreManager {
                 .addOnFailureListener(listener::onError);
     }
 
-    // --- MAPPING ---
 
     @SuppressWarnings("unchecked")
     private Photo mapDocToPhoto(DocumentSnapshot doc) {

@@ -15,12 +15,12 @@ public class Photo {
     private String directions;
     private Author author;
     private List<String> tags;
-    private String locationType; // nature, shop, street, monument, restaurant, other
+    private String locationType;
     private int likes;
     private boolean isLiked;
     private boolean isPublic;
     private String createdAt;
-    private String groupId; // Optionnel : ID du groupe si la photo appartient à un groupe
+    private String groupId;
 
     public Photo(String id, String imageUrl, String title, String description,
                        PhotoLocation location, String date, String period,
@@ -55,7 +55,6 @@ public class Photo {
         this.groupId = groupId;
     }
 
-    // Getters & Setters
     public String getId() { return id; }
     public String getImageUrl() { return imageUrl; }
     public String getTitle() { return title; }

@@ -16,8 +16,7 @@ public class NotificationActivity extends AppCompatActivity {
 
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
 
-        // Simulation de sauvegarde des préférences
-        findViewById(R.id.switch_group_post).setOnClickListener(v -> 
+        findViewById(R.id.switch_group_post).setOnClickListener(v ->
             Toast.makeText(this, "Préférence mise à jour", Toast.LENGTH_SHORT).show());
     }
 }

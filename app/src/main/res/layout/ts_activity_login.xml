@@ -11,7 +11,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Back -->
         <Button
             android:id="@+id/btn_back"
             android:layout_width="wrap_content"
@@ -20,7 +19,6 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Card centrale -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,7 +33,6 @@
                 android:orientation="vertical"
                 android:padding="24dp">
 
-                <!-- Titre -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -55,7 +52,6 @@
                     android:gravity="center"
                     android:layout_marginBottom="24dp"/>
 
-                <!-- Tabs -->
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/tab_layout"
                     android:layout_width="match_parent"
@@ -67,7 +63,6 @@
                     app:tabSelectedTextColor="@color/purple_600"
                     app:tabTextColor="@color/gray_600"/>
 
-                <!-- Login fields -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_login_email"
                     android:layout_width="match_parent"
@@ -97,7 +92,6 @@
                         android:inputType="textPassword"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Signup fields (cachés par défaut) -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_signup_name"
                     android:layout_width="match_parent"
@@ -144,7 +138,6 @@
                         android:inputType="textPassword"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Bouton action -->
                 <Button
                     android:id="@+id/btn_action"
                     android:layout_width="match_parent"
@@ -152,15 +145,6 @@
                     android:text="Se connecter"
                     android:backgroundTint="@color/purple_600"
                     android:padding="14dp"/>
-
-                <Button
-                    android:id="@+id/btn_demo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="🚀 Mode Démo (Alice)"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:textColor="@color/purple_600"
-                    android:layout_marginTop="8dp"/>
 
                 <TextView
                     android:id="@+id/tv_switch_mode"

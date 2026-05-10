@@ -55,7 +55,6 @@ public class CreateGroupActivity extends AppCompatActivity {
             return;
         }
 
-        // Image par défaut pour la simulation
         String imageUrl = "https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=400";
         
         Group newGroup = new Group(
@@ -64,7 +63,6 @@ public class CreateGroupActivity extends AppCompatActivity {
             desc,
             imageUrl
         );
-        // Le créateur est le premier membre
         newGroup.getMemberIds().add(user.getUid());
 
         btnConfirm.setEnabled(false);

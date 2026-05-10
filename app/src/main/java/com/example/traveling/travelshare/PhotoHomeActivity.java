@@ -1,8 +1,11 @@
 package com.example.traveling.travelshare;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -12,17 +15,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import android.util.Log;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.traveling.R;
 import com.example.traveling.travelshare.adapter.PhotoAdapter;
 import com.example.traveling.travelshare.data.FirestoreManager;
 import com.example.traveling.travelshare.model.Group;
 import com.example.traveling.travelshare.model.Photo;
-import com.example.traveling.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -30,10 +31,12 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class PhotoHomeActivity extends AppCompatActivity {
 
     private static final String TAG = "PhotoHomeActivity";
+    private static final int VOICE_REQUEST_CODE = 1001;
     private EditText etSearch;
     private Spinner spinnerFilter, spinnerFilterGroup;
     private Button btnSearch, btnRandom, btnLogin, btnFilters;
@@ -76,8 +79,6 @@ public class PhotoHomeActivity extends AppCompatActivity {
         fabPublish    = findViewById(R.id.fab_publish);
         bottomNav     = findViewById(R.id.bottom_navigation);
         
-        // On essaie de trouver un ProgressBar s'il existe dans le layout
-        // progressBar = findViewById(R.id.progress_bar); // Commenté car peut ne pas exister
 
         firestoreManager = new FirestoreManager();
         setupBottomNav();
@@ -98,7 +99,6 @@ public class PhotoHomeActivity extends AppCompatActivity {
 
         setupGroupFilterSpinner();
 
-        // RecyclerView grille 2 colonnes
         adapter = new PhotoAdapter(this, new ArrayList<>(), photo -> {
             if (photo != null && photo.getId() != null) {
                 Intent intent = new Intent(this, PhotoDetailActivity.class);
@@ -111,23 +111,17 @@ public class PhotoHomeActivity extends AppCompatActivity {
 
         updatePhotoCount(0);
 
-        // Boutons
         btnSearch.setOnClickListener(v -> performSearch());
         btnRandom.setOnClickListener(v -> performRandom());
         
         View btnVoice = findViewById(R.id.btn_voice);
         if (btnVoice != null) {
-            btnVoice.setOnClickListener(v -> {
-                Toast.makeText(this, "Simulation: Écoute vocale...", Toast.LENGTH_SHORT).show();
-                etSearch.setText("Tour Eiffel");
-                performSearch();
-            });
+            btnVoice.setOnClickListener(v -> startVoiceRecognition());
         }
         
         btnFilters.setOnClickListener(v -> toggleFilters());
         fabPublish.setOnClickListener(v -> startActivity(new Intent(this, PublishActivity.class)));
 
-        // Recherche sur Entrée
         etSearch.setOnEditorActionListener((v, actionId, event) -> {
             performSearch();
             return true;
@@ -209,8 +203,7 @@ public class PhotoHomeActivity extends AppCompatActivity {
                 return true;
             }
 
-            SharedPreferences prefs = getSharedPreferences("travelshare", MODE_PRIVATE);
-            boolean loggedIn = FirebaseAuth.getInstance().getCurrentUser() != null || prefs.getBoolean("isLoggedIn", false);
+            boolean loggedIn = FirebaseAuth.getInstance().getCurrentUser() != null;
 
             if (!loggedIn) {
                 Toast.makeText(this, "Veuillez vous connecter pour accéder à cette section", Toast.LENGTH_SHORT).show();
@@ -236,8 +229,7 @@ public class PhotoHomeActivity extends AppCompatActivity {
 
     private void updateLoginButton() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        SharedPreferences prefs = getSharedPreferences("travelshare", MODE_PRIVATE);
-        boolean loggedIn = user != null || prefs.getBoolean("isLoggedIn", false);
+        boolean loggedIn = user != null;
 
         fabPublish.setVisibility(loggedIn ? View.VISIBLE : View.GONE);
 
@@ -245,7 +237,6 @@ public class PhotoHomeActivity extends AppCompatActivity {
             btnLogin.setText("Déconnexion");
             btnLogin.setOnClickListener(v -> {
                 FirebaseAuth.getInstance().signOut();
-                prefs.edit().clear().apply();
                 updateLoginButton();
                 Toast.makeText(this, "Déconnecté", Toast.LENGTH_SHORT).show();
                 performSearch();
@@ -299,7 +290,6 @@ public class PhotoHomeActivity extends AppCompatActivity {
                 Log.e(TAG, "Search error: " + e.getMessage());
                 Toast.makeText(PhotoHomeActivity.this, "Impossible de charger les photos : " + e.getMessage(), Toast.LENGTH_LONG).show();
                 
-                // On vide la liste en cas d'erreur pour éviter d'afficher des données obsolètes
                 adapter.updatePhotos(new ArrayList<>());
                 updatePhotoCount(0);
             }
@@ -326,5 +316,29 @@ public class PhotoHomeActivity extends AppCompatActivity {
 
     private void updatePhotoCount(int count) {
         tvPhotoCount.setText(count + " photo" + (count > 1 ? "s" : ""));
+    }
+
+    private void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Parlez maintenant...");
+        try {
+            startActivityForResult(intent, VOICE_REQUEST_CODE);
+        } catch (ActivityNotFoundException a) {
+            Toast.makeText(this, "La reconnaissance vocale n'est pas supportée sur votre appareil", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == VOICE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (result != null && !result.isEmpty()) {
+                etSearch.setText(result.get(0));
+                performSearch();
+            }
+        }
     }
 }

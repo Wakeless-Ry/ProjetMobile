@@ -69,7 +69,6 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoViewHol
         holder.tvLocation.setText(photo.getLocation().getName());
         holder.tvLikes.setText("❤️ " + photo.getLikes());
 
-        // Initiale auteur
         String initial = photo.getAuthor().getName().substring(0, 1).toUpperCase();
         holder.tvAuthorInitial.setText(initial);
         holder.tvAuthorName.setText(photo.getAuthor().getName());
@@ -82,7 +81,6 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoViewHol
         holder.tvAuthorName.setOnClickListener(authorClick);
         holder.tvAuthorInitial.setOnClickListener(authorClick);
 
-        // Tags (max 3)
         holder.chipGroupTags.removeAllViews();
         List<String> tags = photo.getTags();
         int count = Math.min(tags.size(), 3);

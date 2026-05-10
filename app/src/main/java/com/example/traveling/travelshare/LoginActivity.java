@@ -39,7 +39,6 @@ public class LoginActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         firestoreManager = new FirestoreManager();
 
-        // Bouton retour
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
 
         tabLayout             = findViewById(R.id.tab_layout);
@@ -58,7 +57,6 @@ public class LoginActivity extends AppCompatActivity {
         
         btnAction             = findViewById(R.id.btn_action);
 
-        // Onglets Connexion / Inscription
         tabLayout.addTab(tabLayout.newTab().setText("Connexion"));
         tabLayout.addTab(tabLayout.newTab().setText("Inscription"));
 
@@ -75,8 +73,6 @@ public class LoginActivity extends AppCompatActivity {
             if (isLoginMode) handleLogin();
             else handleSignup();
         });
-
-        findViewById(R.id.btn_demo).setOnClickListener(v -> loginDemo());
 
         updateUI();
     }
@@ -155,8 +151,7 @@ public class LoginActivity extends AppCompatActivity {
                                     .build();
                             
                             user.updateProfile(profileUpdates).addOnCompleteListener(task1 -> {
-                                // Une fois le profil Auth mis à jour, on crée le document dans Firestore
-                                Author newAuthor = new Author(user.getUid(), name, 
+                                Author newAuthor = new Author(user.getUid(), name,
                                         "https://api.dicebear.com/7.x/avataaars/svg?seed=" + name);
                                 
                                 firestoreManager.createUser(newAuthor, new FirestoreManager.OnDataLoadedListener<Void>() {
@@ -169,7 +164,6 @@ public class LoginActivity extends AppCompatActivity {
                                     @Override
                                     public void onError(Exception e) {
                                         btnAction.setEnabled(true);
-                                        // On continue quand même car le compte Auth est créé
                                         onLoginSuccess(name);
                                     }
                                 });
@@ -181,11 +175,6 @@ public class LoginActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
-    }
-
-    private void loginDemo() {
-        Toast.makeText(this, "Mode démo : Connexion Alice (Simulation)", Toast.LENGTH_SHORT).show();
-        onLoginSuccess("Alice");
     }
 
     private void onLoginSuccess(String userName) {
