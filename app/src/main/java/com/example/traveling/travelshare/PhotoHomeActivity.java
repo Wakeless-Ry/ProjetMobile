@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.traveling.R;
+import com.example.traveling.travelpath.TravelPathActivity;
 import com.example.traveling.travelshare.adapter.PhotoAdapter;
 import com.example.traveling.travelshare.data.FirestoreManager;
 import com.example.traveling.travelshare.model.Group;
@@ -44,6 +45,7 @@ public class PhotoHomeActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private View filterPanel;
     private View fabPublish;
+    private View travelPathButton;
     private BottomNavigationView bottomNav;
 
     private PhotoAdapter adapter;
@@ -77,6 +79,7 @@ public class PhotoHomeActivity extends AppCompatActivity {
         recyclerView  = findViewById(R.id.recycler_view);
         filterPanel   = findViewById(R.id.filter_panel);
         fabPublish    = findViewById(R.id.fab_publish);
+        travelPathButton    = findViewById(R.id.travelpath_button);
         bottomNav     = findViewById(R.id.bottom_navigation);
         
 
@@ -92,7 +95,7 @@ public class PhotoHomeActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedLocationType = LOCATION_VALUES[position];
                 Log.d(TAG, "Location filter changed to: " + selectedLocationType);
-                performSearch(); // Auto-refresh
+                performSearch();
             }
             @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
@@ -121,6 +124,7 @@ public class PhotoHomeActivity extends AppCompatActivity {
         
         btnFilters.setOnClickListener(v -> toggleFilters());
         fabPublish.setOnClickListener(v -> startActivity(new Intent(this, PublishActivity.class)));
+        travelPathButton.setOnClickListener(v -> startActivity(new Intent(this, TravelPathActivity.class)));
 
         etSearch.setOnEditorActionListener((v, actionId, event) -> {
             performSearch();

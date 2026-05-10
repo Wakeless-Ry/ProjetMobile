@@ -23,7 +23,7 @@
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
                 android:textAlignment="center"
-                android:text="Travelpath"
+                android:text="TravelPath"
                 android:textSize="40sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"

@@ -17,7 +17,8 @@
         android:theme="@style/Theme.Traveling">
 
         <activity
-            android:name="com.example.traveling.MainActivity"
+            android:name="com.example.traveling.travelshare.TravelShareActivity"
+            android:theme="@style/Theme.TravelShare"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,10 +29,6 @@
         <activity android:name="com.example.traveling.travelpath.TravelPathActivity" />
         <activity android:name="com.example.traveling.travelpath.TravelModeActivity" />
         <activity android:name="com.example.traveling.travelpath.PlaceListActivity" />
-
-        <activity
-            android:name="com.example.traveling.travelshare.TravelShareActivity"
-            android:theme="@style/Theme.TravelShare" />
         <activity
             android:name="com.example.traveling.travelshare.PhotoHomeActivity"
             android:theme="@style/Theme.TravelShare" />

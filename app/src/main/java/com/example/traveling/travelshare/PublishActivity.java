@@ -76,10 +76,10 @@ public class PublishActivity extends AppCompatActivity {
     private CheckBox cbAlwaysOpen;
 
     private static final String[] CATEGORY_LABELS = {
-            "Loisir", "Découverte", "Culture", "Restauration", "Rue", "Commerce"
+            "Loisir", "Découverte", "Culture", "Restauration", "Rue", "Commerce", "Nature"
     };
     private static final String[] CATEGORY_VALUES = {
-            "Loisir", "Découverte", "Culture", "Restauration", "Rue", "Commerce"
+            "Loisir", "Découverte", "Culture", "Restauration", "Rue", "Commerce", "Nature"
     };
 
     @Override
