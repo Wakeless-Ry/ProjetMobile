@@ -71,7 +71,7 @@ public class PublishActivity extends AppCompatActivity {
     private EditText etLocationName, etLatitude, etLongitude, etTimeSpent, etPrice;
     private Spinner spinnerCategory;
 
-    private final List<double[]> horaireSlots = new ArrayList<>(); // [0]=debut, [1]=fin
+    private final List<double[]> horaireSlots = new ArrayList<>();
     private LinearLayout llHoraireSlots;
     private CheckBox cbAlwaysOpen;
 
