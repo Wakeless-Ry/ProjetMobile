@@ -56,11 +56,10 @@ public class PhotoHomeActivity extends AppCompatActivity {
     private boolean filtersVisible = false;
 
     private static final String[] LOCATION_LABELS = {
-            "Tous les lieux", "🌳 Nature", "🗿 Monument",
-            "🚶 Rue", "🛍️ Commerce", "🍽️ Restaurant", "📍 Autre"
+            "Tous les lieux", "Loisir", "Découverte", "Culture", "Restauration", "Rue", "Commerce", "Nature"
     };
     private static final String[] LOCATION_VALUES = {
-            "all", "nature", "monument", "street", "shop", "restaurant", "other"
+            "all", "Loisir", "Découverte", "Culture", "Restauration", "Rue", "Commerce", "Nature"
     };
 
     @Override
